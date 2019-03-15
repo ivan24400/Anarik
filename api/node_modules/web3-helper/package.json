@@ -1,0 +1,11 @@
+{
+  "name": "web3-helper",
+  "version": "1.0.0",
+  "description": "Some utility functions for web3 related operations",
+  "main": "index.js",
+  "author": "Brown fleece",
+  "dependencies":{
+    "ethereumjs-tx": "^1.3.7",
+    "web3-utils": "^1.0.0-beta.46"
+  }
+}
