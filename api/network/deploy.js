@@ -1,12 +1,18 @@
 const Web3 = require('web3');
+let Tx = require('ethereumjs-tx');
+let fs = require('fs');
+let path = require('path');
 
-let connect = require("./connect.js");
-let loader = require("./loader.js");
+let web3_helper = require('web3-helper');
 
-let app_config = require('./config/app.js');
-let token_config = require('./config/token.js');
-const appInfoFilePath = "./info/app.js";
-const tokenInfoFilePath = "./info/token.js";
+let connect = require(path.join(__dirname,'connect.js'));
+let loader = require(path.join(__dirname,'loader.js'));
+let compiler = require(path.join(__dirname,'compiler.js'));
+
+let app_config = require(path.join(__dirname,'config','app.js'));
+let tkn_config = require(path.join(__dirname,'config','token.js'));
+const appInfoFilePath = path.join(__dirname,'info','app.js');
+const tokenInfoFilePath = path.join(__dirname,'info','token.js');
 
 /* Initialize deployment process */
 function deployInit(){
@@ -18,110 +24,155 @@ function deployInit(){
  * @param web3 web3 instance of the blockchain
  * @param contName contract name
  * @param bytecode contract bytecode
+ * @param gas gas limit
  * @param abi contract abi
  * @param fromAddr user account address which will deploy the contract
  * @param infoFilePath file path to store abi and byte code.
+ * @return true/false depending on operation execution.
  */
-function deploy(web3, contName, bytecode, abi, fromAddr, infoFilePath){
+function deployRt(web3, contName, bytecode, gas, abi, fromAddr, private_key, infoFilePath){
+  return new Promise(function(_resolve, _reject){
     console.log('Deploying '+contName+' contracts =========='+web3.eth.coinbase);
 
-    let gasEstimate = web3.eth.estimateGas({data: JSON.stringify(bytecode)});
+    if(bytecode.slice(0,2) !== '0x') bytecode = '0x' + bytecode;
+
+    let gasEstimate;
+    try{
+      gasEstimate = ( (isNaN(gas) || gas == null) ? web3.eth.estimateGas({data: bytecode}) : gas);
+    }catch(e){
+      gasEstimate = compiler.defaultGasLimit;
+    }
+
     console.log("Gas estimate:"+gasEstimate);
+    console.log('Block gas limit:'+web3.eth.getBlock("latest").gasLimit)
+    console.log('Funds:'+web3.eth.getBalance(fromAddr));
+
     let _cont = web3.eth.contract(JSON.parse(JSON.stringify(abi)));
 
-    let contPromise = new Promise(function(resolve, reject){
-      let cont = _cont.new(
-        {
-          from: fromAddr,
-          gas: gasEstimate + gasEstimate*0.5,
-          data: bytecode
-        },
-        function(err,result){
-          if(!err){
-            if(result.address)
-              resolve([result,cont]);
-          }else{
-            reject(err);
-          }
+      web3_helper.sendRawTransaction(
+        web3,
+        private_key,
+        fromAddr,
+        null,
+        gasEstimate,
+        fromAddr,
+        null,
+        _cont.new.getData({data: bytecode})
+      ).then( receipt => {
+        let contAddr = receipt.contractAddress;
+        let contInst = _cont.at(contAddr);
+        console.log('Deployed '+contName+' at:'+contAddr);
+        if(contAddr == null){
+          return;
         }
-      );
-    });
 
-    contPromise.then(function(result){
-      let contRes = result[0];
-      let contInst = result[1];
-      console.log('Deployed '+contName+' at:'+contRes.address);
-      if(contRes.address == null){
-        return;
-      }
+        let infoFileContent = {
+            c_address: contAddr,
+            c_abi: abi
+          };
 
-      let infoFileContent = {
-          c_address: contRes.address,
-          c_abi: abi
-        };
-
-      fs.writeFile(infoFilePath, JSON.stringify(infoFileContent), function(err) {
-          if(err) {
-              return console.log(err);
-          }
-          console.log("Info file created");
+        fs.writeFile(infoFilePath, JSON.stringify(infoFileContent), function(err) {
+            if(err) {
+                return console.log(err);
+            }
+        });
+        connect.add(contName, web3, contInst, contAddr);
+        _resolve();
+      }).catch( err => {
+        _reject(err);
       });
-      connect.add(contName, web3, contInst, contRes.address);
-    })
-    .catch(function(err){
-      console.log("Error encountered");
-      console.log(err);
-    });
+  });
 }
 
 /* Deploy App contracts on blockchain */
 function deployApp(){
 
-  let web3_app = new Web3(new Web3.providers.HttpProvider(app_config.provider));
-  if(web3_app.isConnected()){
-    web3_app.eth.defaultAccount = web3_app.eth.coinbase;
-    let contCompiled = compiler.compileApp();
-    if(contCompiled){
-      deploy(
-        web3_app,
-        app_config.name,
-        contCompiled.Anarik.Anarik.evm.bytecode.object,
-        app_config.acc_address,
-        appInfoFilePath
-      );
+  return new Promise(async function(resolve,reject){
+    let web3_app = new Web3(new Web3.providers.HttpProvider(app_config.provider));
+    if(web3_app.isConnected()){
+
+      web3_app.eth.defaultAccount = web3_app.eth.coinbase;
+
+      let contCompiled = compiler.compileApp();
+      if(contCompiled){
+        try{
+              let result = await deployRt(
+                web3_app,
+                app_config.name,
+                contCompiled.Anarik.Anarik.evm.bytecode.object,
+                contCompiled.Anarik.Anarik.evm.gasEstimates.creation.totalCost,
+                contCompiled.Anarik.Anarik.abi,
+                app_config.acc_address,
+                app_config.acc_pk,
+                appInfoFilePath
+              );
+          resolve();
+        }catch(e){
+          reject('App deployment failed');
+        }
+      }else{
+        reject('App compilation failed');
+      }
     }else{
-      console.log('Deployment failed');
+      reject('App not connected to blockchain');
     }
-  }else{
-    console.log('Not connected to blockchain');
-  }
+  });
 }
 
 /* Deploy token contracts on blockchain */
 function deployToken(){
+  return new Promise(async function(resolve, reject){
+    let web3_tkn = new Web3(new Web3.providers.HttpProvider(tkn_config.provider));
+    if(web3_tkn.isConnected()){
+      web3_tkn.eth.defaultAccount = web3_tkn.eth.coinbase;
+      let contCompiled = compiler.compileToken();
+      console.log('compile gas estimate:'+contCompiled.Snail.Snail.evm.gasEstimates.creation.totalCost)
 
-  let web3_tkn = new Web3(new Web3.providers.HttpProvider(tkn_config.provider));
-  if(web3_tkn.isConnected()){
-    web3_tkn.eth.defaultAccount = web3_tkn.eth.coinbase;
+      if(contCompiled){
+        try{
+          let result = await deployRt(
+            web3_tkn,
+            tkn_config.name,
+            contCompiled.Snail.Snail.evm.bytecode.object,
+            contCompiled.Snail.Snail.evm.gasEstimates.creation.totalCost,
+            contCompiled.Snail.Snail.abi,
+            tkn_config.acc_address,
+            tkn_config.acc_pk,
+            tokenInfoFilePath
+          );
+          resolve();
 
-    let contCompiled = compiler.compileToken();
-    if(contCompiled){
-      deploy(
-        web3_tkn,
-        tkn_config.name,
-        contCompiled.Snail.Snail.evm.bytecode.object,
-        tkn_config.acc_address,
-        tokenInfoFilePath
-      );
+        }catch(e){
+          reject('Token deployment failed');
+        }
+
+      }else{
+        reject('Token compilation failed')
+      }
     }else{
-      console.log('Deployment failed');
+      reject('Token not connected to blockchain ')
     }
-  }else{
-    console.log('Not connected to blockchain');
-  }
+  })
+}
+
+/* Deploy all contracts  to the blockchain */
+function deploy(){
+  return new Promise(function(resolve, reject){
+    (async () =>{
+      try{
+        await deployApp();
+        await deployToken();
+        resolve();
+      }catch(e){
+        reject(e);
+      }
+    })();
+
+  });
 }
 
 module.exports = {
+  deploy: deploy,
   deployApp: deployApp,
   deployToken: deployToken
 }

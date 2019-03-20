@@ -3,7 +3,9 @@ let router = express.Router();
 
 let web3_helper = require('web3-helper');
 
-let connect = require('../network/connect.js');
+let connect = require(path.join(__dirname,'..', 'network', 'connect.js'));
+let app_config = require(path.join(__dirname, '..', 'network', 'config', 'app.js'));
+let tkn_config = require(path.join(__dirname, '..', 'network', 'config', 'token.js'));
 
 router.get('/', function(req, res, next) {
   if(req.session.username != null){
@@ -11,7 +13,7 @@ router.get('/', function(req, res, next) {
     json_res.status = "success";
     json_res.data = [];
     // Get total number of items in the market
-    connect.contAnarik.getItemCount(function(err,result){
+    connect.get(app_config.name).inst.getItemCount(function(err, result){
       if(!err){
         let item_count = parseInt(result.toString());
 
@@ -21,7 +23,11 @@ router.get('/', function(req, res, next) {
 
           prom_items.push(
             new Promise(function(resolve){
-              connect.contAnarik.getPublicMarketItem(index,req.session.username,function(err1,result1){
+              connect.get(app_config.name).inst.getPublicMarketItem(
+                index,
+                req.session.username,
+                function(err1, result1)
+              {
                 if(!err1){
                   json_res.data.push({
                     "id" : index,
@@ -30,8 +36,6 @@ router.get('/', function(req, res, next) {
                     "price" : result1[2],
                     "owner" : result1[3]
                   });
-                }else{
-                  console.log("ERR: CONT Anarik:"); console.log(err1);
                 }
                 resolve();
               });
@@ -61,10 +65,13 @@ router.post('/buy-item',function(req,res,next){
     let item_index = req.body.index;
 
     //Get items's essential details
-    connect.contAnarik.getItem(item_index, function(err1, result1){
+    connect.get(app_config.name).inst.getItem(item_index, function(err1, result1){
       if(!err1){
         // check if buyer has sufficient balance
-        connect.contSnail.balanceOf(req.session.user_account,{from:connect.contSnailAccAddr},function(err2,result2){
+        connect.get(tkn_config.name).inst.balanceOf(
+          req.session.user_account,
+          {from: tkn_config.acc_address},
+          function(err2,result2) {
 
           if(!err2){
             // if item price <= balance of user
@@ -76,30 +83,30 @@ router.post('/buy-item',function(req,res,next){
               let seller_addr = result1[0];
 
                 // Send tokens
-                let stGas = parseInt(connect.contSnail.sendTokens.estimateGas(
+                let stGas = parseInt(connect.get(tkn_config.name).inst.sendTokens.estimateGas(
                   seller_addr,
                   buyer_addr,
                   item_price,
-                  {from: connect.contSnailAccAddr}
+                  {from: tkn_config.acc_address}
                 ));
 
                 let gasLimit = stGas + stGas*0.5;
 
                 web3_helper.sendRawTransaction(
-                  connect.web3_pub,
-                  connect.pub_privateKey,
-                  connect.contSnailAccAddr,
+                  connect.get(tkn_config).web3,
+                  tkn_config.acc_pri_k,
+                  tkn_config.acc_address,
                   null,
                   gasLimit,
-                  connect.contSnailAccAddr,
-                  connect.pub_config.c_address,
-                  connect.contSnail.sendTokens.getData(buyer_addr,seller_addr,item_price)
+                  tkn_config.acc_address,
+                  connect.get(tkn_config.name).addr,
+                  connect.get(tkn_config.name).inst.sendTokens.getData(buyer_addr,seller_addr,item_price)
                 ).then(receipt => {
 
                   let buyer_log = "P\u232c"+seller_name+"\u232c"+result1[2]+"\u232c"+result1[3]+"\u232c"+result1[4].toString();
                   let seller_log = "S\u232c"+req.session.username+"\u232c"+result1[2]+"\u232c"+result1[3]+"\u232c"+result1[4].toString();
 
-                  connect.contAnarik.changeOwner(
+                  connect.get(app_config.name).inst.changeOwner(
                     buyer_addr,
                     buyer_log,
                     seller_addr,

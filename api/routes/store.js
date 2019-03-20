@@ -1,7 +1,9 @@
 let express = require('express');
 let router = express.Router();
 
-let connect = require('../network/connect.js');
+let connect = require(path.join(__dirname,'..', 'network', 'connect.js'));
+let app_config = require(path.join(__dirname, '..', 'network', 'config', 'app.js'));
+let tkn_config = require(path.join(__dirname, '..', 'network', 'config', 'token.js'));
 
 router.get('/',function(req,res,next){
   let json_res = new Object();
@@ -11,7 +13,7 @@ router.get('/',function(req,res,next){
 
   if(req.session.user_account != null){
 
-    connect.contAnarik.getItemCount(function(err1,result1){
+    connect.get(app_config.name).inst.getItemCount(function(err1,result1){
       if(!err1){
         let item_count = parseInt(result1.toString());
         json_res.success = true;
@@ -28,27 +30,29 @@ router.get('/',function(req,res,next){
           let itemListFlag = true;
           for(let index = 0; index < item_count && itemListFlag; index++){
 
-                connect.contAnarik.getUserStoreItem(req.session.username, index, function(err2,result2){
+                connect.get(app_config.name).inst.getUserStoreItem(
+                  req.session.username,
+                  index,
+                  function(err2,result2)
+                  {
+                    if(!err2){
+                      json_res.data.push({
+                        "sale":result2[0],
+                        "index":index,
+                        "name":result2[1],
+                        "description":result2[2],
+                        "price":result2[3].toString()
+                      });
 
-                  if(!err2){
-                    json_res.data.push({
-                      "sale":result2[0],
-                      "index":index,
-                      "name":result2[1],
-                      "description":result2[2],
-                      "price":result2[3].toString()
-                    });
-
-                  }else{
-                    if(index == 0){
-                      itemListFlag = false;
+                    }else{
+                      if(index == 0){
+                        itemListFlag = false;
+                      }
                     }
-                  }
-                  callback_resolve();
+                    callback_resolve();
                 });
           }
       }else{
-        console.log("ERR: CONT Anarik:");console.log(err1);
         json_res.message = "Failed to retrieve a user item count";
         res.json(json_res);
       }
@@ -61,24 +65,29 @@ router.get('/',function(req,res,next){
   }
 });
 
-/** Add an item in the user store
-  */
+/** Add an item in the user store  */
 router.post('/item',function(req, res, next){
   let json_res = new Object();
   json_res.success = false;
   json_res.message = "NA";
 
   if(req.session.user_account != null){
-
-    connect.contAnarik.createItem(
+    let gasEstimate = connect.get(app_config.name).inst.createItem.estimateGas({
+    req.body.product_name,
+    req.body.product_desc,
+    req.body.product_price,
+    req.session.user_account
+  });
+  gasEstimate = gasEstimate + gasEstimate*0.4;
+    connect.get(app_config.name).inst.createItem(
       req.body.product_name,
       req.body.product_desc,
       req.body.product_price,
       req.session.user_account,
-      {gas: 200001},
-      function(err,result){
+      {gas: gasEstimate},
+      function(err,result)
+      {
         if(err){
-          console.log("ERR: CONT Anarik: create item failed"); console.log(err);
           json_res.message = "Unable to add item";
           res.status(400).json(json_res);
         }else{
@@ -92,9 +101,7 @@ router.post('/item',function(req, res, next){
     }
 });
 
-/**
-  * Update an item in the user's store
-  */
+/** Update an item in the user's store */
 router.put('/item', function(req,res,next){
   let json_res = new Object();
   json_res.success = false;
@@ -102,7 +109,7 @@ router.put('/item', function(req,res,next){
 
   if(req.session.username != null){
 
-    connect.contAnarik.updateItem(
+    connect.get(app_config.name).inst.updateItem(
       req.body.name,
       req.body.description,
       req.body.price,
@@ -110,9 +117,9 @@ router.put('/item', function(req,res,next){
       parseInt(req.body.index),
       req.session.username,
       req.session.password,
-      function(err, result1){
+      function(err, result1)
+      {
         if(err){
-          console.log("ERR: STORE: item update error"); console.log(err);
           res.status(400);
           json_res.message = "Unable to update item";
           res.send(json_res);
@@ -138,7 +145,15 @@ router.delete('/item',function(req,res,next){
 
   if(req.session.username != null){
 
-    connect.contAnarik.deleteItem(parseInt(req.body.index),{gas:200002},function(err,result){
+    let gasEstimate = connect.get(app_config.name).inst.deleteItem.estimateGas(
+      parseInt(req.body.index));
+    gasEstimate = gasEstimate + gasEstimate*0.4;
+
+    connect.get(app_config.name).inst.deleteItem(
+      parseInt(req.body.index),
+      {gas: gasEstimate},
+      function(err,result)
+      {
         if(!err){
           json_res.success = true;
           json_res.message = "Deleted successfully";

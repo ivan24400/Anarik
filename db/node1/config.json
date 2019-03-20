@@ -1,6 +1,0 @@
-{
-  "rpc_addr": "127.0.0.1",
-  "rpc_port": 10000,
-  "data_dir": ".\\data\\",
-  "target_gas_limit": 1000000001
-}

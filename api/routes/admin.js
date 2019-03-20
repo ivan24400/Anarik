@@ -1,9 +1,12 @@
 let express = require('express');
+let path = require('path');
 let router = express.Router();
 
 let web3_helper = require('web3-helper');
 
-let connect = require('../network/connect.js');
+let connect = require(path.join(__dirname,'..', 'network', 'connect.js'));
+let app_config = require(path.join(__dirname,'..', 'network', 'config', 'app.js'))
+let tkn_config = require(path.join(__dirname,'..', 'network', 'config', 'token.js'))
 
 router.post('/send-tokens',function(req,res,next){
   let json_res = new Object();
@@ -15,25 +18,25 @@ router.post('/send-tokens',function(req,res,next){
     req.session.username === connect._admin
   ){
     if(req.body.token_count > 0){
-      connect.contAnarik.getUserAccAddr(req.body.token_recvr, function(err1,result1){
+      connect.get(app_config.name).inst.getUserAccAddr(req.body.token_recvr, function(err1,result1){
         if(!err1){
 
-          let dtGas = parseInt(connect.contSnail.donateTokens.estimateGas(
+          let dtGas = parseInt(connect.get(tkn_config.name).inst.donateTokens.estimateGas(
             result1,
             req.body.token_count,
-            {from: connect.contSnailAccAddr}
+            {from: tkn_config.acc_address}
           ));
 
           let gasLimit = dtGas + dtGas*0.3;
           web3_helper.sendRawTransaction(
-            connect.web3_pub,
-            connect.pub_privateKey,
-            connect.contSnailAccAddr,
+            connect.get(tkn_config.name).web3,
+            tkn_config.acc_pri_k,
+            tkn_config.acc_address,
             null,
             gasLimit,
-            connect.contSnailAccAddr,
-            connect.pub_config.c_address,
-            connect.contSnail.donateTokens.getData(result1, req.body.token_count)
+            tkn_config.acc_address,
+            connect.get(tkn_config.name).addr,
+            connect.get(tkn_config.name).inst.donateTokens.getData(result1, req.body.token_count)
           ).then(receipt => {
             json_res.success = true;
             json_res.message = "Token transferred successfully";
@@ -69,19 +72,19 @@ router.post('/ack-req',function(req,res,next){
     //Acknowledge token request
     let akGas = parseInt(contSnail.ackRequestAt.estimateGas(
       req.body.token_requestor_index,
-      {from: connect.contSnailAccAddr}
+      {from: tkn_config.acc_address}
     ));
 
     let gasLimit = akGas + akGas*0.3;
     web3_helper.sendRawTransaction(
-      connect.web3_pub,
-      connect.pub_privateKey,
-      connect.contSnailAccAddr,
+      connect.get(tkn_config.name).web3,
+      tkn_config.acc_pri_k,
+      tkn_config.acc_address,
       null,
       gasLimit,
-      connect.contSnailAccAddr,
-      connect.pub_config.c_address,
-      connect.contSnail.ackRequestAt.getData(req.body.token_requestor_index)
+      tkn_config.acc_address,
+      connect.get(tkn_config.name).addr,
+      connect.get(tkn_config.name).inst.ackRequestAt.getData(req.body.token_requestor_index)
     ).then(receipt => {
       json_res.success = true;
       json_res.message = "Token request acknowledged successfully";
@@ -106,22 +109,22 @@ router.post('/reject-req',function(req,res,next){
 
   if(req.body.token_requestor_index != null && req.session.username == connect._admin){
 
-    let rjrGas = parseInt(connect.contSnail.rejectRequestAt.estimateGas(
+    let rjrGas = parseInt(connect.get(tkn_config.name).inst.rejectRequestAt.estimateGas(
       req.body.token_requestor_index,
-      {from: connect.contSnailAccAddr}
+      {from: tkn_config.acc_address}
     ));
 
     let gasLimit = rjrGas + rjrGas*0.3;
 
     web3_helper.sendRawTransaction(
-      connect.web3_pub,
-      connect.pub_privateKey,
-      connect.contSnailAccAddr,
+      connect.get(tkn_config.name).web3,
+      tkn_config.acc_pri_k,
+      tkn_config.acc_address,
       null,
       gasLimit,
-      connect.contSnailAccAddr,
-      connect.pub_config.c_address,
-      connect.contSnail.rejectRequestAt.getData(req.body.token_requestor_index)
+      tkn_config.acc_address,
+      connect.get(tkn_config.name).addr,
+      connect.get(tkn_config.name).inst.rejectRequestAt.getData(req.body.token_requestor_index)
     ).then(receipt => {
       json_res.sucess = true;
       json_res.message = "Token request rejected successfully";

@@ -104,7 +104,7 @@ contract Snail is ERC20 {
       (keccak256(bytes(_adminName)) == keccak256(bytes(_username))) &&
       (keccak256(bytes(_adminPasswd)) == keccak256(bytes(_password))),
       "Invalid credentials"
-    )
+    );
   }
   /**
    * @dev Change username and password of admin
@@ -112,7 +112,7 @@ contract Snail is ERC20 {
    * @param _password admin's password
    */
   function updateAdminCreds(string memory _username, string memory _password) public {
-    require((bytes(_username).length >= 3) && (bytes(_pasword).length >= 3),"Invalid credentials");
+    require((bytes(_username).length >= 3) && (bytes(_password).length >= 3),"Invalid credentials");
     _adminName = _username;
     _adminPasswd = _password;
   }

@@ -1,10 +1,10 @@
 var express = require('express');
 var router = express.Router();
 
-let connect = require('../network/connect.js');
+let connect = require(path.join(__dirname,'..', 'network', 'connect.js'));
 
-let app_config = require('../network/config/app.js');
-let tkn_config = require('../network/config/token.js');
+let app_config = require(path.join(__dirname, '..', 'network', 'config', 'app.js'));
+let tkn_config = require(path.join(__dirname, '..', 'network', 'config', 'token.js'));
 
 router.get('/', function(req, res) {
   res.render('index',{msg:'Anarik api'});
@@ -48,7 +48,7 @@ router.post('/login', function(req, res, next) {
 
         if(user_arr){
             //Get total tokens owned by the admin
-            connect.get(tkn_config.name).inst.balanceOf(connect._adminAccAddr,function(err4,result4){
+            connect.get(tkn_config.name).inst.balanceOf(tkn_config.acc_address,function(err4,result4){
               if(!err4){
 
                 let requests_arr = [];
@@ -64,7 +64,7 @@ router.post('/login', function(req, res, next) {
                       const index = i;
                       promise_arr.push(
                         new Promise(function(resolve){
-                          connect.get(tkn_config.name).inst.getTokensDetailsAt(index,function(err6, result6){
+                          connect.get(tkn_config.name).inst.getTokensDetailsAt(index, function(err6, result6){
                             if(!err6){
                               requests_arr.push({
                                 index:index,

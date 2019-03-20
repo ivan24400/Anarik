@@ -1,18 +1,34 @@
 let express = require('express');
 let router = express.Router();
 
-let connect = require('../network/connect.js');
-let loader = require('../network/loader.js');
-let deploy = require('../network/deploy.js');
+let connect = require(path.join(__dirname, '..', 'network', 'connect.js'));
+let loader = require(path.join(__dirname, '..', 'network', 'loader.js'));
+let deploy = require(path.join(__dirname, '..', 'network', 'deploy.js'));
 
-let appConfig = require('../network/config/app.js');
-let tknConfig = require('../network/config/token.js');
+let appConfig = require(path.join(__dirname, '..', 'network', 'config', 'app.js'));
+let tknConfig = require(path.join(__dirname, '..', 'network', 'config', 'token.js'));
 
-
+/* Deploy all contracts to blockchain */
 router.post('/deploy', function(req,res,next){
+  let json_res = new Object();
+  json_res.success = false;
+  json_res.msg = "NA";
 
+  deploy.deploy()
+  .then( () => {
+    json_res.success = true;
+    json_res.msg = "Contracts deployed successfully";
+  })
+  .catch( (e) => {
+    console.log(e);
+    json_res.msg = "Something failed";
+  })
+  .finally( () => {
+    res.json(json_res);
+  });
 });
 
+/* Load all contracts */
 router.post('/load', function(req, res, next){
   let json_res = new Object();
   json_res.success = false;
@@ -29,9 +45,10 @@ router.post('/load', function(req, res, next){
   })
   .finally(() =>{
     res.json(json_res);
-  })
+  });
 });
 
+/* Test connection to blockchain */
 router.get('/test_connection', function(req, res, next){
   let json_res = new Object();
   json_res.success = false;

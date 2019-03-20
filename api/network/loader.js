@@ -2,10 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const Web3 = require('web3');
 
-let connect = require('./connect.js');
-let appConfig = require('./config/app.js');
-let tknConfig = require('./config/token.js');
+let connect = require(path.join(__dirname,'connect.js'));
 
+let appConfig = require(path.join(__dirname,'config', 'app.js'));
+let tknConfig = require(path.join(__dirname,'config', 'token.js'));
 const appInfoFilePath = path.join(__dirname,'info','app.js');
 const tknInfoFilePath = path.join(__dirname, 'info', 'token.js');
 
