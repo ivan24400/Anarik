@@ -1,5 +1,6 @@
 let express = require('express');
 let router = express.Router();
+let path = require('path');
 
 let connect = require(path.join(__dirname, '..', 'network', 'connect.js'));
 let loader = require(path.join(__dirname, '..', 'network', 'loader.js'));
@@ -16,12 +17,16 @@ router.post('/deploy', function(req,res,next){
 
   deploy.deploy()
   .then( () => {
+
     json_res.success = true;
     json_res.msg = "Contracts deployed successfully";
+
   })
   .catch( (e) => {
-    console.log(e);
+
+    res.status(500);
     json_res.msg = "Something failed";
+
   })
   .finally( () => {
     res.json(json_res);
@@ -36,12 +41,16 @@ router.post('/load', function(req, res, next){
 
   loader.load()
   .then(function(){
+
     json_res.success = true;
     json_res.msg = "Contracts loaded successfully";
+
   })
   .catch(function(result){
-    console.log(result);
+
+    res.status(500);
     json_res.msg = result;
+
   })
   .finally(() =>{
     res.json(json_res);
@@ -59,7 +68,6 @@ router.get('/test_connection', function(req, res, next){
     json_res.balance.app = connect.get(appConfig.name).web3.eth.getBalance(appConfig.acc_address).toString();
     json_res.balance.tkn = connect.get(tknConfig.name).web3.eth.getBalance(tknConfig.acc_address).toString();
   } catch(e) {
-    console.log(e);
     json_res.msg = "Unable to get balance";
   }
 

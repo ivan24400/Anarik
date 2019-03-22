@@ -46,7 +46,6 @@ function loadApp(){
       );
       resolve();
     }else{
-      console.log('Not connected to App blockchain');
       reject('Not connected to App blockchain');
     }
   });
@@ -69,7 +68,6 @@ function loadToken(){
       );
       resolve();
     }else{
-      console.log('Not connected to Token blockchain');
       reject('Not connected to Token blockchain');
     }
   });
@@ -78,7 +76,7 @@ function loadToken(){
 
 /* Load all contracts */
 function load(){
-  return new Promise(function(resolve,reject){
+  return new Promise(function(resolve, reject){
     Promise.all([loadApp(), loadToken()])
     .then(function(){
       resolve();

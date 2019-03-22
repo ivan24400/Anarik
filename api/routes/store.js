@@ -1,5 +1,6 @@
 let express = require('express');
 let router = express.Router();
+let path = require('path');
 
 let connect = require(path.join(__dirname,'..', 'network', 'connect.js'));
 let app_config = require(path.join(__dirname, '..', 'network', 'config', 'app.js'));
@@ -8,8 +9,7 @@ let tkn_config = require(path.join(__dirname, '..', 'network', 'config', 'token.
 router.get('/',function(req,res,next){
   let json_res = new Object();
   json_res.success = false;
-  json_res.message = "NA";
-  json_res.data = [];
+  json_res.msg = "NA";
 
   if(req.session.user_account != null){
 
@@ -24,6 +24,7 @@ router.get('/',function(req,res,next){
         let callback_resolve = function(){
           callback_resolve_index++;
           if(callback_resolve_index == item_count){
+            json_res.success = true;
             res.json(json_res);
           }
         }
@@ -53,15 +54,14 @@ router.get('/',function(req,res,next){
                 });
           }
       }else{
-        json_res.message = "Failed to retrieve a user item count";
-        res.json(json_res);
+        json_res.msg = "Failed to retrieve a user item count";
+        res.status(500).json(json_res);
       }
     });
 
   }else{
-    res.status(401);
-    json_res.message = "Unauthorised";
-    res.json(json_res);
+    json_res.msg = "Unauthorised";
+    res.status(401).json(json_res);
   }
 });
 
@@ -69,15 +69,15 @@ router.get('/',function(req,res,next){
 router.post('/item',function(req, res, next){
   let json_res = new Object();
   json_res.success = false;
-  json_res.message = "NA";
+  json_res.msg = "NA";
 
   if(req.session.user_account != null){
-    let gasEstimate = connect.get(app_config.name).inst.createItem.estimateGas({
+    let gasEstimate = connect.get(app_config.name).inst.createItem.estimateGas(
     req.body.product_name,
     req.body.product_desc,
     req.body.product_price,
     req.session.user_account
-  });
+  );
   gasEstimate = gasEstimate + gasEstimate*0.4;
     connect.get(app_config.name).inst.createItem(
       req.body.product_name,
@@ -85,18 +85,18 @@ router.post('/item',function(req, res, next){
       req.body.product_price,
       req.session.user_account,
       {gas: gasEstimate},
-      function(err,result)
+      function(err, result)
       {
         if(err){
-          json_res.message = "Unable to add item";
-          res.status(400).json(json_res);
+          json_res.msg = "Unable to add item";
+          res.status(500).json(json_res);
         }else{
           json_res.success = true;
           res.json(json_res);
         }
       });
     }else{
-      json_res.message = "Unauthorised";
+      json_res.msg = "Unauthorised";
       res.status(401).json(json_res);
     }
 });
@@ -105,7 +105,7 @@ router.post('/item',function(req, res, next){
 router.put('/item', function(req,res,next){
   let json_res = new Object();
   json_res.success = false;
-  json_res.message = "NA";
+  json_res.msg = "NA";
 
   if(req.session.username != null){
 
@@ -120,28 +120,26 @@ router.put('/item', function(req,res,next){
       function(err, result1)
       {
         if(err){
-          res.status(400);
-          json_res.message = "Unable to update item";
-          res.send(json_res);
+          json_res.msg = "Unable to update item";
+          res.status(500).json(json_res);
         }else{
           json_res.success = true;
-          json_res.message = "Updated item successfully";
-          res.send(json_res);
+          json_res.msg = "Updated item successfully";
+          res.json(json_res);
         }
       });
     }else{
-      res.status(401);
-      json_res.message = "Unauthorised";
-      res.send(json_res);
+      res;
+      json_res.msg = "Unauthorised";
+      res.status(401).json(json_res);
     }
 });
 
-/** Delete an item from the store
-  */
+/** Delete an item from the store  */
 router.delete('/item',function(req,res,next){
   let json_res = new Object();
   json_res.success = false;
-  json_res.message = "NA";
+  json_res.msg = "NA";
 
   if(req.session.username != null){
 
@@ -156,18 +154,17 @@ router.delete('/item',function(req,res,next){
       {
         if(!err){
           json_res.success = true;
-          json_res.message = "Deleted successfully";
-          res.send(json_res);
+          json_res.msg = "Deleted successfully";
+          res.json(json_res);
         }else{
-          json_res.message = "Deletion failed";
-          res.status(400).send(json_res);
+          json_res.msg = "Deletion failed";
+          res.status(400).json(json_res);
         }
       });
 
   }else{
-    res.status(401);
-    json_res.message = "Unauthorised";
-    res.send(json_res);
+    json_res.msg = "Unauthorised";
+    res.status(401).json(json_res);
   }
 });
 

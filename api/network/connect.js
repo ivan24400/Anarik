@@ -25,7 +25,8 @@ function addContract(name, web3Inst, contInst, contAddr){
   contracts[name] = {
     web3: web3Inst,
     inst: contInst,
-    addr: contAddr
+    addr: contAddr,
+    gas: web3Inst.eth.getBlock('latest').gasLimit
   }
 }
 
@@ -38,11 +39,13 @@ function getContract(name){
   if(name !== undefined && contracts[name] !== undefined){
     return contracts[name];
   }else{
-    throw new Error('Undefined contract name');
+    throw new Error('Undefined contract');
   }
 }
 
 module.exports = {
+  _admin: "light",
+  _admin_pass: "dark",
   reset: reset,
   add: addContract,
   get: getContract

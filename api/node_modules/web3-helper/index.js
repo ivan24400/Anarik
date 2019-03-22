@@ -13,6 +13,8 @@ function numToHexStrict(num){
     }else{
       num = web3_utils.toHex(num);
     }
+  }else{
+    throw new Error('Invalid number');
   }
   return num;
 }
@@ -55,8 +57,8 @@ function getTransactionReceiptMined(web3Instance, txHash, interval) {
  * @param web3_inst web3 instance connected to blockchain
  * @param privateKey private key of wallet
  * @param accAddr contract/account address
- * @param gasPrice custom gas price
- * @param gasLimit gas units to use
+ * @param gasPrice custom gas price (in hex)
+ * @param gasLimit gas units (in hex) to use
  * @param from transaction sender
  * @param to transaction receiver
  * @param data function data
@@ -85,12 +87,7 @@ function sendRawTransaction(web3_inst, privateKey, accAddr, gasPrice, gasLimit, 
       gasPrice = web3_utils.toHex(web3_inst.eth.gasPrice.toString());
     }
 
-    if(web3_utils.isHex(gasPrice)){
-      if(!web3_utils.isHexStrict(gasPrice))
-      gasPrice = '0x' + gasPrice;
-    }else{
-      gasPrice = web3_utils.toHex(gasPrice);
-    }
+    gasPrice = numToHexStrict(gasPrice);
 
     // Default gas limit is assumed to be 50% higher than estimation.
     if(gasLimit == null){
@@ -98,12 +95,7 @@ function sendRawTransaction(web3_inst, privateKey, accAddr, gasPrice, gasLimit, 
       gasLimit = web3_utils.toHex(gasLimit + gasLimit*0.5);
     }
 
-    if(web3_utils.isHex(gasLimit)){
-      if(!web3_utils.isHexStrict(gasLimit))
-      gasLimit = '0x' + gasLimit;
-    }else{
-      gasLimit = web3_utils.toHex(gasLimit);
-    }
+    gasLimit = numToHexStrict(gasLimit);
 
     //Check for strict hex
     if(from.slice(0,2) !== '0x') from = '0x' + from;

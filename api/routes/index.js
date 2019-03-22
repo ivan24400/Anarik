@@ -1,13 +1,13 @@
 var express = require('express');
 var router = express.Router();
-
+let path = require('path');
 let connect = require(path.join(__dirname,'..', 'network', 'connect.js'));
 
 let app_config = require(path.join(__dirname, '..', 'network', 'config', 'app.js'));
 let tkn_config = require(path.join(__dirname, '..', 'network', 'config', 'token.js'));
 
 router.get('/', function(req, res) {
-  res.render('index',{msg:'Anarik api'});
+  res.json({msg:'Anarik API'});
 });
 
 
@@ -17,11 +17,15 @@ router.post('/login', function(req, res, next) {
   json_res.msg = "NA";
 
   // Admin user
-  if(req.body.l_username == connect._admin && req.body.l_password == connect._admin_pass){
+  if(
+    req.body.l_username == connect._admin &&
+    req.body.l_password == connect._admin_pass
+  ){
     req.session.username = req.body.l_username;
     req.session.password = req.body.l_password;
+
     // Get total number of users
-    connect.get(app_config.name).inst.getUserCount(function(err1,result1){
+    connect.get(app_config.name).inst.getUserCount(function(err1, result1){
       if(!err1){
         let total_users = parseInt(result1.toString());
         let user_arr = [];
@@ -31,12 +35,12 @@ router.post('/login', function(req, res, next) {
           user_arr_proms.push(
             new Promise(function(resolve){
               //Get username
-              connect.get(app_config.name).inst.getUserNameAt(_index,function(err2,result2){
+              connect.get(app_config.name).inst.getUserNameAt(_index,function(err2, result2){
                 if(!err2){
                   user_arr.push(result2);
                 }else{
                   json_res.msg = "User retrieval failed";
-                  res.status(401).render('error',json_res);
+                  res.status(401).json(json_res);
                 }
               });
             }));
@@ -48,7 +52,9 @@ router.post('/login', function(req, res, next) {
 
         if(user_arr){
             //Get total tokens owned by the admin
-            connect.get(tkn_config.name).inst.balanceOf(tkn_config.acc_address,function(err4,result4){
+            connect.get(tkn_config.name).inst.balanceOf(
+              tkn_config.acc_address,
+              function(err4, result4){
               if(!err4){
 
                 let requests_arr = [];
@@ -81,54 +87,79 @@ router.post('/login', function(req, res, next) {
                     (async () => {
                       await Promise.all(promise_arr);
                       let req_addr = new Set([]);
-                      requests_arr = requests_arr.filter((item, index, arr) => { if(req_addr.has(item.address)){ return false; } else { req_addr.add(item.address); return true; } });
-                      json_res.username =
-                      res.render('admin',{username:connect._admin, snails: result4.toString(), users:user_arr, token_requests:requests_arr});
+                      requests_arr = requests_arr.filter(
+                        (item, index, arr) => {
+                           if(req_addr.has(item.address)){
+                              return false;
+                            } else {
+                              req_addr.add(item.address);
+                              return true;
+                            }
+                        });
+                      json_res.success = true;
+                      json_res.username = connect._admin;
+                      json_res.snails = result4.toString();
+                      json_res.users = user_arr,
+                      json_res.token_requests = requests_arr;
+                      res.json(json_res);
                     })();
                   }
                 });
               }else{
-                res.render('error',{message:"User account balance retrieval failed"});
+                json_res.msg = "User account balance retrieval failed";
+                res.status(500).json(json_res);
               }
             });
         }
       }else{
-        res.status(401).render('error',{message: "Unable to access user's list"});
+        json_res = "Unable to access user's list";
+        res.status(401).json(json_res);
       }
     });
 
   }else{
-    /** Normal user login
-     */
-    connect.get(app_config.name).inst.verifyCredential(req.body.l_username,req.body.l_password, function(err,result){
+    /** Normal user login */
+    try{
+      connect.get(app_config.name).inst.verifyCredential(req.body.l_username,req.body.l_password, function(err,result){
 
-      if(!err){
-        connect.get(app_config.name).inst.getUserAccAddr(req.body.l_username, {gas: 200000},function(err2,result2){
-          if(!err2){
-            //Get total tokens owned by the user
-            connect.get(tkn_config.name).inst.balanceOf(result2,{from:connect.contSnailAccAddr},function(err3,result3){
-              if(!err3){
-                req.session.username = req.body.l_username;
-                req.session.password = req.body.l_password;
-                req.session.user_account = result2;
-                res.render('user',{username:req.body.l_username, snails:parseInt(result3.toString(10))});
-              }else{
-                res.render('error',{message:"User account balance retrieval failed"});
-              }
-            });
-          }else{
-            res.render('error',{message:"User account address retrieval failed"});
-          }
-        });
-      }else {
-        res.status(401).render('error',{message: "Invalid credentials"});
-      }
-    });
+        if(!err){
+          connect.get(app_config.name).inst.getUserAccAddr(req.body.l_username, {gas: 200000},function(err2,result2){
+            if(!err2){
+              //Get total tokens owned by the user
+              connect.get(tkn_config.name).inst.balanceOf(result2,{from:connect.contSnailAccAddr},function(err3,result3){
+                if(!err3){
+                  req.session.username = req.body.l_username;
+                  req.session.password = req.body.l_password;
+                  req.session.user_account = result2;
+
+                  json_res.success = true;
+                  json_res.username = req.body.l_username;
+                  json_res.snails = parseInt(result3.toString(10));
+
+                  res.json(json_res);
+                }else{
+                  json_res.msg = "User account balance retrieval failed";
+                  res.status(500).json(json_res);
+                }
+              });
+            }else{
+              json_res.msg = "User account address retrieval failed";
+              res.status(500).json(json_res);
+            }
+          });
+        }else {
+          json_res.msg = "Invalid credentials";
+          res.status(401).json(json_res);
+        }
+      });
+    }catch{
+      json_res.msg = "Something failed"
+      res.status(500).json(json_res);
+    }
   }
 });
 
-/** Logout the user
-*/
+/** Logout the user */
 router.get('/logout',function(req,res,next){
   req.session.destroy(function(err) {
     if(err)

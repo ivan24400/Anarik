@@ -5,6 +5,8 @@ var path = require('path');
 const contAppBasePath = path.join(__dirname,'..','contracts','app');
 const contTokenBasePath = path.join(__dirname,'..','contracts','token');
 
+const DEFAULT_GAS_LIMIT = 5000000;
+
 /**
  * Import reference function for App contracts
  * @param filePath import file path
@@ -12,8 +14,6 @@ const contTokenBasePath = path.join(__dirname,'..','contracts','token');
  */
 function findAppSolImports(filePath){
   let content = null;
-  console.log('App imports');
-  console.log(filePath);
   if(filePath === 'User.sol' || filePath === 'user/User.sol'){
     content = { content:fs.readFileSync(path.join(contAppBasePath,'market','user','User.sol'),'utf8') };
   } else if(filePath === 'UserIntf.sol' || filePath === 'user/UserIntf.sol'){
@@ -23,7 +23,6 @@ function findAppSolImports(filePath){
   } else {
     content = {error:'File not found'};
   }
-  console.log(content);
   return content;
 }
 
@@ -56,8 +55,7 @@ function compileApp(){
   	}
   };
 
-  var output = JSON.parse(solc.compile(JSON.stringify(input)));
-  console.log(output);
+  let output = JSON.parse(solc.compile(JSON.stringify(input)));
   return output.contracts;
 }
 
@@ -68,8 +66,6 @@ function compileApp(){
  */
 function findTokenSolImports(filePath){
   let content = null;
-  console.log('Token imports');
-  console.log(filePath);
   if(filePath === 'SafeMath.sol' || filePath === 'math/SafeMath.sol'){
     content = { content:fs.readFileSync(path.join(contTokenBasePath,'math','SafeMath.sol'),'utf8') };
   } else if(filePath === 'ERC20/ERC20.sol'){
@@ -79,7 +75,6 @@ function findTokenSolImports(filePath){
   } else {
     content = {error:'File not found'};
   }
-  console.log(content);
   return content;
 }
 
@@ -112,13 +107,12 @@ function compileToken(){
     }
   }
 
-  var output = JSON.parse(solc.compile(JSON.stringify(input)));
-  console.log(output);
+  let output = JSON.parse(solc.compile(JSON.stringify(input)));
   return output.contracts;
 }
 
 module.exports = {
-  defaultGasLimit: 5000000,
+  defaultGasLimit: parseInt(DEFAULT_GAS_LIMIT).toString(16),
   compileApp: compileApp,
   compileToken: compileToken
 };

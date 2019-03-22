@@ -1,5 +1,6 @@
 let express = require('express');
 let router = express.Router();
+let path = require('path');
 
 let web3_helper = require('web3-helper');
 
@@ -12,6 +13,7 @@ router.get('/', function(req, res, next) {
     let json_res = new Object();
     json_res.status = "success";
     json_res.data = [];
+
     // Get total number of items in the market
     connect.get(app_config.name).inst.getItemCount(function(err, result){
       if(!err){
@@ -44,12 +46,14 @@ router.get('/', function(req, res, next) {
 
         (async () =>{
           await Promise.all(prom_items);
-          res.render('market',json_res);
+          json_res.success = true;
+          res.json(json_res);
         })();
       }
     });
   }else{
-    res.status(401).render('error',{message:"Unauthorised"});
+    json_res.msg = "Unauthorised";
+    res.status(401).json(json_res);
   }
 });
 
@@ -59,7 +63,7 @@ router.get('/', function(req, res, next) {
 router.post('/buy-item',function(req,res,next){
   let json_res = new Object();
   json_res.success = false;
-  json_res.message = "NA";
+  json_res.msg = "NA";
 
   if(req.session.username != null && req.session.user_account != null){
     let item_index = req.body.index;
@@ -71,7 +75,7 @@ router.post('/buy-item',function(req,res,next){
         connect.get(tkn_config.name).inst.balanceOf(
           req.session.user_account,
           {from: tkn_config.acc_address},
-          function(err2,result2) {
+          function(err2, result2) {
 
           if(!err2){
             // if item price <= balance of user
@@ -106,45 +110,53 @@ router.post('/buy-item',function(req,res,next){
                   let buyer_log = "P\u232c"+seller_name+"\u232c"+result1[2]+"\u232c"+result1[3]+"\u232c"+result1[4].toString();
                   let seller_log = "S\u232c"+req.session.username+"\u232c"+result1[2]+"\u232c"+result1[3]+"\u232c"+result1[4].toString();
 
+                  let gasEstimate = connect.get(app_config.name).inst.changeOwner.estimateGas(
+                    buyer_addr,
+                    buyer_log,
+                    seller_addr,
+                    seller_log,
+                    item_index
+                  );
+
                   connect.get(app_config.name).inst.changeOwner(
                     buyer_addr,
                     buyer_log,
                     seller_addr,
                     seller_log,
                     item_index,
-                    {gas: 500000},
+                    {gas: gasEstimate},
                     function(err4,result4){
 
                       if(!err4){
                         json_res.success = true;
-                        json_res.message = "Market item transacted successfully";
+                        json_res.msg = "Market item transacted successfully";
                         res.json(json_res);
                       }else{
-                        json_res.message = "Change ownership failed";
-                        res.status(400).json(json_res);
+                        json_res.msg = "Change ownership failed";
+                        res.status(500).json(json_res);
                       }
                     });
 
                 }).catch(error => {
-                  json_res.message = "Market item transaction failed";
-                  res.status(400).json(json_res);
+                  json_res.msg = "Market item transaction failed";
+                  res.status(500).json(json_res);
                 });
               }else{
-                  json_res.message = "Insufficient balance";
+                  json_res.msg = "Insufficient balance";
                   res.status(400).json(json_res);
               }
               }else{
-                json_res.message = "Invalid user address";
+                json_res.msg = "Invalid user address";
                 res.status(400).json(json_res);
               }
             });
       }else{
-        json_res.message = "Unable to retrieve item details";
+        json_res.msg = "Unable to retrieve item details";
         res.status(400).json(json_res);
       }
     });
   }else{
-    json_res.message = "Unauthorised";
+    json_res.msg = "Unauthorised";
     res.status(401).json(json_res);
   }
 });

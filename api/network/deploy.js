@@ -96,18 +96,19 @@ function deployApp(){
       let contCompiled = compiler.compileApp();
       if(contCompiled){
         try{
-              let result = await deployRt(
+              await deployRt(
                 web3_app,
                 app_config.name,
                 contCompiled.Anarik.Anarik.evm.bytecode.object,
                 contCompiled.Anarik.Anarik.evm.gasEstimates.creation.totalCost,
                 contCompiled.Anarik.Anarik.abi,
                 app_config.acc_address,
-                app_config.acc_pk,
+                app_config.acc_pri_k,
                 appInfoFilePath
               );
           resolve();
         }catch(e){
+          console.log(e)
           reject('App deployment failed');
         }
       }else{
@@ -130,14 +131,14 @@ function deployToken(){
 
       if(contCompiled){
         try{
-          let result = await deployRt(
+          await deployRt(
             web3_tkn,
             tkn_config.name,
             contCompiled.Snail.Snail.evm.bytecode.object,
             contCompiled.Snail.Snail.evm.gasEstimates.creation.totalCost,
             contCompiled.Snail.Snail.abi,
             tkn_config.acc_address,
-            tkn_config.acc_pk,
+            tkn_config.acc_pri_k,
             tokenInfoFilePath
           );
           resolve();
@@ -145,7 +146,6 @@ function deployToken(){
         }catch(e){
           reject('Token deployment failed');
         }
-
       }else{
         reject('Token compilation failed')
       }
