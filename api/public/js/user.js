@@ -23,7 +23,7 @@ function loadStoreItems(){
         //Delete item
         $(".store-delete-item").click(function(){
           let json_data = new Object();
-          json_data.index = $(this).siblings('label').data('index');
+          json_data.product_index = $(this).siblings('label').data('index');
 
           $.ajax({
             method: 'DELETE',
@@ -47,11 +47,11 @@ function loadStoreItems(){
         $(".store-update-item").on("click",function(){
 
           let json_data = new Object();
-          json_data.name = $(this).siblings("input[name='name']").val();
-          json_data.description = $(this).siblings("input[name='description']").val();
-          json_data.price = $(this).siblings("input[name='price']").val();
-          json_data.sale = $(this).siblings('label').children('input').is(":checked");
-          json_data.index = $(this).siblings('label').data('index');
+          json_data.product_name = $(this).siblings("input[name='name']").val();
+          json_data.product_desc = $(this).siblings("input[name='description']").val();
+          json_data.product_price = $(this).siblings("input[name='price']").val();
+          json_data.product_sale = $(this).siblings('label').children('input').is(":checked");
+          json_data.product_index = $(this).siblings('label').data('index');
 
           $.ajax({
             method: "PUT",

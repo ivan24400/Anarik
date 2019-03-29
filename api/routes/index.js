@@ -6,11 +6,12 @@ let connect = require(path.join(__dirname,'..', 'network', 'connect.js'));
 let app_config = require(path.join(__dirname, '..', 'network', 'config', 'app.js'));
 let tkn_config = require(path.join(__dirname, '..', 'network', 'config', 'token.js'));
 
+/** Api home */
 router.get('/', function(req, res) {
-  res.json({msg:'Anarik API'});
+  res.json({msg:'Anarik API v1'});
 });
 
-
+/** Authorize/Login a user */
 router.post('/login', function(req, res, next) {
   let json_res = new Object();
   json_res.success = false;
@@ -25,7 +26,9 @@ router.post('/login', function(req, res, next) {
     req.session.password = req.body.l_password;
 
     // Get total number of users
-    connect.get(app_config.name).inst.getUserCount(function(err1, result1){
+    connect.get(app_config.name).inst.getUserCount(
+      {from: app_config.acc_address},
+      function(err1, result1){
       if(!err1){
         let total_users = parseInt(result1.toString());
         let user_arr = [];
@@ -35,7 +38,10 @@ router.post('/login', function(req, res, next) {
           user_arr_proms.push(
             new Promise(function(resolve){
               //Get username
-              connect.get(app_config.name).inst.getUserNameAt(_index,function(err2, result2){
+              connect.get(app_config.name).inst.getUserNameAt(
+                _index,
+                {from: app_config.acc_address},
+                function(err2, result2){
                 if(!err2){
                   user_arr.push(result2);
                 }else{
@@ -54,12 +60,15 @@ router.post('/login', function(req, res, next) {
             //Get total tokens owned by the admin
             connect.get(tkn_config.name).inst.balanceOf(
               tkn_config.acc_address,
+              {from: tkn_config.acc_address},
               function(err4, result4){
               if(!err4){
 
                 let requests_arr = [];
                 //Get token request
-                connect.get(tkn_config.name).inst.getTokenRequestCount(function(err5,result5){
+                connect.get(tkn_config.name).inst.getTokenRequestCount(
+                  {from: tkn_config.acc_address},
+                  function(err5,result5){
                   if(!err5){
                     const total_requests = parseInt(result5.toString());
 
@@ -70,7 +79,10 @@ router.post('/login', function(req, res, next) {
                       const index = i;
                       promise_arr.push(
                         new Promise(function(resolve){
-                          connect.get(tkn_config.name).inst.getTokensDetailsAt(index, function(err6, result6){
+                          connect.get(tkn_config.name).inst.getTokensDetailsAt(
+                            index,
+                            {from: tkn_config.acc_address},
+                            function(err6, result6){
                             if(!err6){
                               requests_arr.push({
                                 index:index,
@@ -120,13 +132,23 @@ router.post('/login', function(req, res, next) {
   }else{
     /** Normal user login */
     try{
-      connect.get(app_config.name).inst.verifyCredential(req.body.l_username,req.body.l_password, function(err,result){
+      connect.get(app_config.name).inst.verifyCredential(
+        req.body.l_username,
+        req.body.l_password,
+        {from: app_config.acc_address},
+        function(err,result){
 
-        if(!err){
-          connect.get(app_config.name).inst.getUserAccAddr(req.body.l_username, {gas: 200000},function(err2,result2){
+        if(result){
+          connect.get(app_config.name).inst.getUserAccAddr(
+            req.body.l_username,
+            {from: app_config.acc_address, gas: 200000},
+            function(err2,result2){
             if(!err2){
               //Get total tokens owned by the user
-              connect.get(tkn_config.name).inst.balanceOf(result2,{from:connect.contSnailAccAddr},function(err3,result3){
+              connect.get(tkn_config.name).inst.balanceOf(
+                result2,
+                {from: tkn_config.acc_address},
+                function(err3,result3){
                 if(!err3){
                   req.session.username = req.body.l_username;
                   req.session.password = req.body.l_password;
@@ -162,10 +184,9 @@ router.post('/login', function(req, res, next) {
 /** Logout the user */
 router.get('/logout',function(req,res,next){
   req.session.destroy(function(err) {
-    if(err)
-      console.log("session destroyed: "+err);
+    if(err) req.session = null;
+    res.redirect('/');
   });
-  res.redirect('/');
 });
 
 module.exports = router;

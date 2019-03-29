@@ -9,6 +9,7 @@ let connect = require(path.join(__dirname,'..', 'network', 'connect.js'));
 let app_config = require(path.join(__dirname, '..', 'network', 'config', 'app.js'));
 let tkn_config = require(path.join(__dirname, '..', 'network', 'config', 'token.js'));
 
+/** Add new user */
 router.post('/', function(req, res, next) {
   let json_res = new Object();
   json_res.msg = "NA";
@@ -21,9 +22,10 @@ router.post('/', function(req, res, next) {
       connect.get(app_config.name).inst.verifyCredential(
         req.body.s_username,
         req.body.s_password,
+        {from: app_config.acc_address, gas: app_config.DEFAULT_GAS},
         function(err, result)
         {
-          if(!err){
+          if(result){
             json_res.msg = 'User already exists';
             res.json(json_res);
           }else{
@@ -37,21 +39,46 @@ router.post('/', function(req, res, next) {
                 userAccAddr,
                 req.body.s_password
               );
-              gasEstimateAu = gasEstimateAu + gasEstimateAu*0.5;
-              connect.get(app_config.name).inst.addUser(
-                req.body.s_username,
-                userAccAddr,
-                req.body.s_password,
-                {gas: gasEstimateAu},
-                function(err2, result2){
 
-                  if(!err2){
-                    res.redirect("../logout");
-                  }else{
-                    json_res.msg = 'User account creation failed';
-                    res.status(500).json(json_res);
-                  }
-                });
+              gasEstimateAu = Math.round(gasEstimateAu + gasEstimateAu*0.5);
+
+              web3_helper.sendRawTransaction(
+                connect.get(app_config.name).web3,
+                app_config.acc_pri_k,
+                app_config.acc_address,
+                null,
+                gasEstimateAu,
+                app_config.acc_address,
+                connect.get(app_config.name).inst.address,
+                connect.get(app_config.name).inst.addUser.getData(
+                  req.body.s_username,
+                  userAccAddr,
+                  req.body.s_password
+                )
+              ).then( receipt => {
+                json_res.success = true;
+                json_res.msg = "User created successfully";
+              }).catch(e => {
+                json_res.msg = 'User account creation failed';
+                res.status(500);
+              }).finally( () => {
+                res.json(json_res);
+              });
+
+              // connect.get(app_config.name).inst.addUser(
+              //   req.body.s_username,
+              //   userAccAddr,
+              //   req.body.s_password,
+              //   {from: app_config.acc_address, gas: gasEstimateAu},
+              //   function(err2, result2){
+              //
+              //     if(!err2){
+              //       res.redirect("../logout");
+              //     }else{
+              //       json_res.msg = 'User account creation failed';
+              //       res.status(500).json(json_res);
+              //     }
+              //   });
             }else{
                 json_res.msg = "User account creation failed";
                 res.status(500).json(json_res);
@@ -75,24 +102,24 @@ router.post('/req-tokens',function(req, res, next){
     if(req.body.token_count != null){
       if(!isNaN(req.body.token_count)){
 
-        let atrGas = parseInt(connect.contSnail.addTokenRequest.estimateGas(
+        let gasLimit = parseInt(connect.get(tkn_config.name).inst.addTokenRequest.estimateGas(
           req.session.username,
           req.session.user_account,
           req.body.token_count,
-          {from: connect.contSnailAccAddr}
+          {from: tkn_config.acc_address}
         ));
 
-        let gasLimit = atrGas + atrGas*0.3;
+        gasLimit = Math.round(gasLimit + gasLimit*0.3);
 
         web3_helper.sendRawTransaction(
-          connect.web3_pub,
-          connect.pub_privateKey,
-          connect.contSnailAccAddr,
+          connect.get(tkn_config.name).web3,
+          tkn_config.acc_pri_k,
+          tkn_config.acc_address,
           null,
           gasLimit,
-          connect.contSnailAccAddr,
-          connect.pub_config.c_address,
-          connect.contSnail.addTokenRequest.getData(
+          tkn_config.acc_address,
+          connect.get(tkn_config.name).inst.address,
+          connect.get(tkn_config.name).inst.addTokenRequest.getData(
             req.session.username,
             req.session.user_account,
             req.body.token_count
@@ -123,8 +150,8 @@ router.post('/req-tokens',function(req, res, next){
   });
 
 /**
-* get purchase history of logged-in user
-*/
+ * Get purchase history of logged-in user
+ */
 router.get('/purchase-history',function(req, res, next){
 
   let json_res = new Object();
@@ -137,6 +164,7 @@ router.get('/purchase-history',function(req, res, next){
 
       connect.get(app_config.name).inst.getLogCount(
         req.session.username,
+        {from: app_config.acc_address},
         function(err1, result1){
         if(!err1){
           let token_count = parseInt(result1.toString()); // BigNumber
@@ -151,6 +179,7 @@ router.get('/purchase-history',function(req, res, next){
                 connect.get(app_config.name).inst.getLog(
                   req.session.username,
                   index,
+                  {from: app_config.acc_address},
                   function(err2, result2)
                   {
                   if(!err2){

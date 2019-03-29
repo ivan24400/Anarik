@@ -20,7 +20,7 @@ function reset(){
  * @param contInst instance of deployed contract
  * @param contAddr address at which contract is deployed
  */
-function addContract(name, web3Inst, contInst, contAddr){
+function addContract(name, web3Inst, contInst, contAddr, defaultAcc){
   if(contracts == null) reset();
   contracts[name] = {
     web3: web3Inst,

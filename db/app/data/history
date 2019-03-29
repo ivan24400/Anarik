@@ -1,3 +1,2 @@
-miner.start()
-alskfd
-eth.hashrate
+eth.accounts
+eth.getBalance("0xf4595efe779b65bd61034b47eb2e4098e57b2ce8")

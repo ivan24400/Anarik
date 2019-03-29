@@ -9,7 +9,7 @@ let deploy = require(path.join(__dirname, '..', 'network', 'deploy.js'));
 let appConfig = require(path.join(__dirname, '..', 'network', 'config', 'app.js'));
 let tknConfig = require(path.join(__dirname, '..', 'network', 'config', 'token.js'));
 
-/* Deploy all contracts to blockchain */
+/** Deploy all contracts to blockchain */
 router.post('/deploy', function(req,res,next){
   let json_res = new Object();
   json_res.success = false;
@@ -33,7 +33,7 @@ router.post('/deploy', function(req,res,next){
   });
 });
 
-/* Load all contracts */
+/** Load all contracts */
 router.post('/load', function(req, res, next){
   let json_res = new Object();
   json_res.success = false;
@@ -57,7 +57,7 @@ router.post('/load', function(req, res, next){
   });
 });
 
-/* Test connection to blockchain */
+/** Test connection to blockchain */
 router.get('/test_connection', function(req, res, next){
   let json_res = new Object();
   json_res.success = false;

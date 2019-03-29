@@ -29,7 +29,7 @@ contract Snail is ERC20 {
    * @param _totalSupply total number of tokens.
    */
   constructor(uint256 _totalSupply, address _admin_addr)
-    ERC20(_totalSupply,_admin_addr)
+    ERC20(_totalSupply, _admin_addr)
     public
    {
      _adminAddr = _admin_addr;

@@ -42,7 +42,7 @@ function loadApp(){
         appConfig.name,
         web3,
         web3.eth.contract(contInfo.c_abi).at(contInfo.c_address),
-        contInfo.c_address
+        contInfo.c_address,
       );
       resolve();
     }else{

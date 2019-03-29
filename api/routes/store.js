@@ -2,10 +2,13 @@ let express = require('express');
 let router = express.Router();
 let path = require('path');
 
+let web3_helper = require('web3-helper');
+
 let connect = require(path.join(__dirname,'..', 'network', 'connect.js'));
 let app_config = require(path.join(__dirname, '..', 'network', 'config', 'app.js'));
 let tkn_config = require(path.join(__dirname, '..', 'network', 'config', 'token.js'));
 
+/** Get user store details */
 router.get('/',function(req,res,next){
   let json_res = new Object();
   json_res.success = false;
@@ -13,11 +16,18 @@ router.get('/',function(req,res,next){
 
   if(req.session.user_account != null){
 
-    connect.get(app_config.name).inst.getItemCount(function(err1,result1){
+    connect.get(app_config.name).inst.getItemCount(
+      {from: app_config.acc_address},
+      function(err1,result1){
       if(!err1){
         let item_count = parseInt(result1.toString());
         json_res.success = true;
         json_res.data = [];
+
+        if(item_count === 0){
+          res.json(json_res);
+          return;
+        }
 
         let callback_resolve_index = 0;
 
@@ -34,6 +44,7 @@ router.get('/',function(req,res,next){
                 connect.get(app_config.name).inst.getUserStoreItem(
                   req.session.username,
                   index,
+                  {from: app_config.acc_address},
                   function(err2,result2)
                   {
                     if(!err2){
@@ -73,29 +84,39 @@ router.post('/item',function(req, res, next){
 
   if(req.session.user_account != null){
     let gasEstimate = connect.get(app_config.name).inst.createItem.estimateGas(
-    req.body.product_name,
-    req.body.product_desc,
-    req.body.product_price,
-    req.session.user_account
-  );
-  gasEstimate = gasEstimate + gasEstimate*0.4;
-    connect.get(app_config.name).inst.createItem(
       req.body.product_name,
       req.body.product_desc,
-      req.body.product_price,
-      req.session.user_account,
-      {gas: gasEstimate},
-      function(err, result)
-      {
-        if(err){
-          json_res.msg = "Unable to add item";
-          res.status(500).json(json_res);
-        }else{
-          json_res.success = true;
-          res.json(json_res);
-        }
-      });
-    }else{
+      req.body.product_price.toString(),
+      req.session.user_account
+    );
+    gasEstimate = Math.round(gasEstimate + gasEstimate*0.4);
+    gasEstimate = app_config.DEFAULT_GAS * 3;
+
+    web3_helper.sendRawTransaction(
+      connect.get(app_config.name).web3,
+      app_config.acc_pri_k,
+      app_config.acc_address,
+      null,
+      gasEstimate,
+      app_config.acc_address,
+      connect.get(app_config.name).inst.addr,
+      connect.get(app_config.name).inst.createItem.getData(
+        req.body.product_name,
+        req.body.product_desc,
+        req.body.product_price.toString(),
+        req.session.user_account
+      )
+    ).then(receipt => {
+      json_res.success = true;
+      json_res.msg = "Added item successfully";
+    }).catch(e => {
+      json_res.msg = "Unable to add item";
+      res.status(500);
+    }).finally( () => {
+      res.json(json_res);
+    });
+
+  }else{
       json_res.msg = "Unauthorised";
       res.status(401).json(json_res);
     }
@@ -109,25 +130,49 @@ router.put('/item', function(req,res,next){
 
   if(req.session.username != null){
 
-    connect.get(app_config.name).inst.updateItem(
-      req.body.name,
-      req.body.description,
-      req.body.price,
-      (req.body.sale === "true"),
-      parseInt(req.body.index),
-      req.session.username,
-      req.session.password,
-      function(err, result1)
-      {
-        if(err){
-          json_res.msg = "Unable to update item";
-          res.status(500).json(json_res);
-        }else{
-          json_res.success = true;
-          json_res.msg = "Updated item successfully";
-          res.json(json_res);
-        }
-      });
+    let gasEstimate;
+    try{
+      gasEstimate = connect.get(app_config.name).inst.updateItem.estimateGas(
+        req.body.product_name,
+        req.body.product_desc,
+        req.body.product_price,
+        req.body.product_sale,
+        req.body.product_index,
+        req.session.username,
+        req.session.password
+      );
+      gasEstimate = Math.round(gasEstimate + gasEstimate*0.1);
+    }catch(e){
+      gasEstimate = app_config.DEFAULT_GAS;
+    }
+
+    web3_helper.sendRawTransaction(
+      connect.get(app_config.name).web3,
+      app_config.acc_pri_k,
+      app_config.acc_address,
+      null,
+      gasEstimate,
+      app_config.acc_address,
+      connect.get(app_config.name).inst.addr,
+      connect.get(app_config.name).inst.updateItem.getData(
+        req.body.product_name,
+        req.body.product_desc,
+        req.body.product_price,
+        req.body.product_sale,
+        req.body.product_index,
+        req.session.username,
+        req.session.password
+      )
+    ).then(receipt => {
+      json_res.success = true;
+      json_res.msg = "Updated item successfully";
+    }).catch(e => {
+      json_res.msg = "Unable to update item";
+      res.status(500);
+    }).finally( () => {
+      res.json(json_res);
+    });
+
     }else{
       res;
       json_res.msg = "Unauthorised";
@@ -144,29 +189,34 @@ router.delete('/item',function(req,res,next){
   if(req.session.username != null){
 
     let gasEstimate = connect.get(app_config.name).inst.deleteItem.estimateGas(
-      parseInt(req.body.index));
-    gasEstimate = gasEstimate + gasEstimate*0.4;
+      req.body.product_index);
+    gasEstimate = Math.round(gasEstimate + gasEstimate*0.4);
 
-    connect.get(app_config.name).inst.deleteItem(
-      parseInt(req.body.index),
-      {gas: gasEstimate},
-      function(err,result)
-      {
-        if(!err){
-          json_res.success = true;
-          json_res.msg = "Deleted successfully";
-          res.json(json_res);
-        }else{
-          json_res.msg = "Deletion failed";
-          res.status(400).json(json_res);
-        }
-      });
+    web3_helper.sendRawTransaction(
+      connect.get(app_config.name).web3,
+      app_config.acc_pri_k,
+      app_config.acc_address,
+      null,
+      gasEstimate,
+      app_config.acc_address,
+      connect.get(app_config.name).inst.addr,
+      connect.get(app_config.name).inst.deleteItem.getData(
+        req.body.product_index
+      )
+    ).then(receipt => {
+      json_res.success = true;
+      json_res.msg = "Deleted successfully";
+    }).catch(e => {
+      json_res.msg = "Deletion failed";
+      res.status(500);
+    }).finally( () => {
+      res.json(json_res);
+    });
 
   }else{
     json_res.msg = "Unauthorised";
     res.status(401).json(json_res);
   }
 });
-
 
 module.exports = router;

@@ -8,6 +8,7 @@ let connect = require(path.join(__dirname,'..', 'network', 'connect.js'));
 let app_config = require(path.join(__dirname, '..', 'network', 'config', 'app.js'));
 let tkn_config = require(path.join(__dirname, '..', 'network', 'config', 'token.js'));
 
+/** Market Details */
 router.get('/', function(req, res, next) {
   if(req.session.username != null){
     let json_res = new Object();
@@ -15,7 +16,9 @@ router.get('/', function(req, res, next) {
     json_res.data = [];
 
     // Get total number of items in the market
-    connect.get(app_config.name).inst.getItemCount(function(err, result){
+    connect.get(app_config.name).inst.getItemCount(
+      {from: app_config.acc_address},
+      function(err, result){
       if(!err){
         let item_count = parseInt(result.toString());
 
@@ -28,6 +31,7 @@ router.get('/', function(req, res, next) {
               connect.get(app_config.name).inst.getPublicMarketItem(
                 index,
                 req.session.username,
+                {from: app_config.acc_address},
                 function(err1, result1)
               {
                 if(!err1){
@@ -58,8 +62,8 @@ router.get('/', function(req, res, next) {
 });
 
 /**
-  * Buy an item from the market
-  */
+ * Buy an item from the market
+ */
 router.post('/buy-item',function(req,res,next){
   let json_res = new Object();
   json_res.success = false;
@@ -69,7 +73,10 @@ router.post('/buy-item',function(req,res,next){
     let item_index = req.body.index;
 
     //Get items's essential details
-    connect.get(app_config.name).inst.getItem(item_index, function(err1, result1){
+    connect.get(app_config.name).inst.getItem(
+      item_index,
+      {from: app_config.acc_address},
+      function(err1, result1){
       if(!err1){
         // check if buyer has sufficient balance
         connect.get(tkn_config.name).inst.balanceOf(
@@ -87,24 +94,28 @@ router.post('/buy-item',function(req,res,next){
               let seller_addr = result1[0];
 
                 // Send tokens
-                let stGas = parseInt(connect.get(tkn_config.name).inst.sendTokens.estimateGas(
+                let gasLimit = parseInt(connect.get(tkn_config.name).inst.sendTokens.estimateGas(
                   seller_addr,
                   buyer_addr,
                   item_price,
                   {from: tkn_config.acc_address}
                 ));
 
-                let gasLimit = stGas + stGas*0.5;
+                gasLimit = Math.round(gasLimit + gasLimit*0.5);
 
                 web3_helper.sendRawTransaction(
-                  connect.get(tkn_config).web3,
+                  connect.get(tkn_config.name).web3,
                   tkn_config.acc_pri_k,
                   tkn_config.acc_address,
                   null,
                   gasLimit,
                   tkn_config.acc_address,
-                  connect.get(tkn_config.name).addr,
-                  connect.get(tkn_config.name).inst.sendTokens.getData(buyer_addr,seller_addr,item_price)
+                  connect.get(tkn_config.name).inst.addr,
+                  connect.get(tkn_config.name).inst.sendTokens.getData(
+                    buyer_addr,
+                    seller_addr,
+                    item_price
+                  )
                 ).then(receipt => {
 
                   let buyer_log = "P\u232c"+seller_name+"\u232c"+result1[2]+"\u232c"+result1[3]+"\u232c"+result1[4].toString();
@@ -118,24 +129,30 @@ router.post('/buy-item',function(req,res,next){
                     item_index
                   );
 
-                  connect.get(app_config.name).inst.changeOwner(
-                    buyer_addr,
-                    buyer_log,
-                    seller_addr,
-                    seller_log,
-                    item_index,
-                    {gas: gasEstimate},
-                    function(err4,result4){
-
-                      if(!err4){
-                        json_res.success = true;
-                        json_res.msg = "Market item transacted successfully";
-                        res.json(json_res);
-                      }else{
-                        json_res.msg = "Change ownership failed";
-                        res.status(500).json(json_res);
-                      }
-                    });
+                  web3_helper.sendRawTransaction(
+                    connect.get(app_config.name).web3,
+                    app_config.acc_pri_k,
+                    app_config.acc_address,
+                    null,
+                    gasEstimate,
+                    app_config.acc_address,
+                    connect.get(app_config.name).inst.address,
+                    connect.get(app_config.name).inst.sendTokens.changeOwner(
+                      buyer_addr,
+                      buyer_log,
+                      seller_addr,
+                      seller_log,
+                      item_index
+                    )
+                  ).then( receipt => {
+                    json_res.success = true;
+                    json_res.msg = "Market item transacted successfully";
+                  }).catch ( e => {
+                    json_res.msg = "Change ownership failed";
+                    res.status(500);
+                  }).finally( () => {
+                    res.json(json_res);
+                  });
 
                 }).catch(error => {
                   json_res.msg = "Market item transaction failed";

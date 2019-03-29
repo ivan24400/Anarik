@@ -3,14 +3,15 @@
     "chainId": 15,
     "homesteadBlock": 0,
     "eip155Block": 0,
-    "eip158Block": 0
+    "eip158Block": 0,
+    "byzantiumBlock": 0
   },
-  "gasLimit": "0x90000000000",
-  "difficulty": "0x24",
-  "coinbase": "0xe44f98b12f1460bfde940f3b1bf95b537dbc4106",
+  "gasLimit": "0x260000000",
+  "difficulty": "0x0",
+  "coinbase": "0xf4595efe779b65bd61034b47eb2e4098e57b2ce8",
   "alloc": {
-    "0xe44f98b12f1460bfde940f3b1bf95b537dbc4106": {
-      "balance": "1000000000000000000"
+    "0xf4595efe779b65bd61034b47eb2e4098e57b2ce8": {
+      "balance": "100000000000000000000"
     }
   }
 }

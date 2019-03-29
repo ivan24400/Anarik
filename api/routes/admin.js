@@ -21,27 +21,31 @@ router.post('/send-tokens',function(req,res,next){
     req.session.username === connect._admin
   ){
     if(req.body.token_count > 0){
-      connect.get(app_config.name).inst.getUserAccAddr(req.body.token_recvr, function(err1,result1){
+      connect.get(app_config.name).inst.getUserAccAddr(
+        req.body.token_recvr,
+        {from: app_config.acc_address},
+        function(err1,result1){
         if(!err1){
 
-          let dtGas;
+          let gasLimit;
           try{
-            dtGas = connect.get(tkn_config.name).inst.donateTokens.estimateGas(
+            gasLimit = connect.get(tkn_config.name).inst.donateTokens.estimateGas(
              result1,
              req.body.token_count,
              {from: tkn_config.acc_address}
            );
-           dtGas = dtGas + dtGas*0.6;
-          }catch{
-            dtGas = connect.get(tkn_config.name).gas;
+           gasLimit = Math.round(gasLimit + gasLimit*0.6);
+          }catch(e){
+           gasLimit = connect.get(tkn_config.name).gas;
           }
+
 
           web3_helper.sendRawTransaction(
             connect.get(tkn_config.name).web3,
             tkn_config.acc_pri_k,
             tkn_config.acc_address,
             null,
-            dtGas,
+            gasLimit,
             tkn_config.acc_address,
             connect.get(tkn_config.name).addr,
             connect.get(tkn_config.name).inst.donateTokens.getData(result1, req.body.token_count)
@@ -57,6 +61,7 @@ router.post('/send-tokens',function(req,res,next){
             res.status(500).json(json_res);
 
           });
+
         }else{
           json_res.msg = "Unable to retrieve user's account";
           res.status(500).json(json_res);
@@ -80,12 +85,13 @@ router.post('/ack-req',function(req,res,next){
   if(req.body.token_requestor_index != null && req.session.username === connect._admin){
 
     //Acknowledge token request
-    let akGas = parseInt(contSnail.ackRequestAt.estimateGas(
+    let gasLimit = parseInt(connect.get(tkn_config.name).inst.ackRequestAt.estimateGas(
       req.body.token_requestor_index,
       {from: tkn_config.acc_address}
     ));
 
-    let gasLimit = akGas + akGas*0.3;
+    gasLimit = Math.round(gasLimit + gasLimit*0.3);
+
     web3_helper.sendRawTransaction(
       connect.get(tkn_config.name).web3,
       tkn_config.acc_pri_k,
@@ -107,15 +113,15 @@ router.post('/ack-req',function(req,res,next){
       res.status(400).json(json_res);
 
     });
+
   }else{
     json_res.msg = "Unauthorised";
     res.status(401).json(json_res);
   }
 });
 
-/** Reject a token request
-  */
-router.post('/reject-req',function(req,res,next){
+/** Reject a token request */
+router.post('/reject-req', function(req,res,next){
 
   let json_res = new Object();
   json_res.success = false;
@@ -123,12 +129,12 @@ router.post('/reject-req',function(req,res,next){
 
   if(req.body.token_requestor_index != null && req.session.username == connect._admin){
 
-    let rjrGas = parseInt(connect.get(tkn_config.name).inst.rejectRequestAt.estimateGas(
+    let gasLimit = parseInt(connect.get(tkn_config.name).inst.rejectRequestAt.estimateGas(
       req.body.token_requestor_index,
       {from: tkn_config.acc_address}
     ));
 
-    let gasLimit = rjrGas + rjrGas*0.3;
+    gasLimit = Math.round(gasLimit + gasLimit*0.3);
 
     web3_helper.sendRawTransaction(
       connect.get(tkn_config.name).web3,

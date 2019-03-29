@@ -14,6 +14,8 @@ let tkn_config = require(path.join(__dirname,'config','token.js'));
 const appInfoFilePath = path.join(__dirname,'info','app.js');
 const tokenInfoFilePath = path.join(__dirname,'info','token.js');
 
+const TOTAL_TOKENS = 2400000;
+
 /* Initialize deployment process */
 function deployInit(){
     loader.reset();
@@ -30,7 +32,7 @@ function deployInit(){
  * @param infoFilePath file path to store abi and byte code.
  * @return true/false depending on operation execution.
  */
-function deployRt(web3, contName, bytecode, gas, abi, fromAddr, private_key, infoFilePath){
+function deployRt(web3, contName, contArgs, bytecode, gas, abi, fromAddr, private_key, infoFilePath){
   return new Promise(function(_resolve, _reject){
     console.log('Deploying '+contName+' contracts =========='+web3.eth.coinbase);
 
@@ -42,6 +44,7 @@ function deployRt(web3, contName, bytecode, gas, abi, fromAddr, private_key, inf
     }catch(e){
       gasEstimate = compiler.defaultGasLimit;
     }
+    gasEstimate = Math.round(parseInt(gasEstimate) + gasEstimate*0.5);
 
     console.log("Gas estimate:"+gasEstimate);
     console.log('Block gas limit:'+web3.eth.getBlock("latest").gasLimit)
@@ -57,7 +60,7 @@ function deployRt(web3, contName, bytecode, gas, abi, fromAddr, private_key, inf
         gasEstimate,
         fromAddr,
         null,
-        _cont.new.getData({data: bytecode})
+        (contArgs == null ? _cont.new.getData({data: bytecode}) : _cont.new.getData(...contArgs,{data: bytecode}))
       ).then( receipt => {
         let contAddr = receipt.contractAddress;
         let contInst = _cont.at(contAddr);
@@ -91,7 +94,7 @@ function deployApp(){
     let web3_app = new Web3(new Web3.providers.HttpProvider(app_config.provider));
     if(web3_app.isConnected()){
 
-      web3_app.eth.defaultAccount = web3_app.eth.coinbase;
+      web3_app.eth.defaultAccount = app_config.acc_address;
 
       let contCompiled = compiler.compileApp();
       if(contCompiled){
@@ -99,6 +102,7 @@ function deployApp(){
               await deployRt(
                 web3_app,
                 app_config.name,
+                null,
                 contCompiled.Anarik.Anarik.evm.bytecode.object,
                 contCompiled.Anarik.Anarik.evm.gasEstimates.creation.totalCost,
                 contCompiled.Anarik.Anarik.abi,
@@ -121,11 +125,11 @@ function deployApp(){
 }
 
 /* Deploy token contracts on blockchain */
-function deployToken(){
+function deployToken(totalTokens){
   return new Promise(async function(resolve, reject){
     let web3_tkn = new Web3(new Web3.providers.HttpProvider(tkn_config.provider));
     if(web3_tkn.isConnected()){
-      web3_tkn.eth.defaultAccount = web3_tkn.eth.coinbase;
+      web3_tkn.eth.defaultAccount = tkn_config.acc_address;
       let contCompiled = compiler.compileToken();
       console.log('compile gas estimate:'+contCompiled.Snail.Snail.evm.gasEstimates.creation.totalCost)
 
@@ -134,6 +138,7 @@ function deployToken(){
           await deployRt(
             web3_tkn,
             tkn_config.name,
+            [(totalTokens == null ? TOTAL_TOKENS : totalTokens), tkn_config.acc_address],
             contCompiled.Snail.Snail.evm.bytecode.object,
             contCompiled.Snail.Snail.evm.gasEstimates.creation.totalCost,
             contCompiled.Snail.Snail.abi,

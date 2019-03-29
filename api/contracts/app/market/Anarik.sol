@@ -44,7 +44,6 @@ contract Anarik is User{
     uint256 _price,
     address _owner
   ) public
-  returns (uint256)
   {
     Item memory temp = Item({
       _active : true,
@@ -54,8 +53,7 @@ contract Anarik is User{
       available : false,
       owner : _owner
     });
-    uint256 t = (_items.push(temp) - 1);
-    return t;
+    _items.push(temp);
   }
 
   /**

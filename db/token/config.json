@@ -2,6 +2,7 @@
   "net_id": 1824,
   "rpc_addr": "127.0.0.1",
   "rpc_port": 10001,
+  "enode_port": 30307,
   "data_dir": ".\\data\\",
   "genesis":".\\genesis.json"
 }
