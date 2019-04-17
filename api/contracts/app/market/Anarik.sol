@@ -1,11 +1,17 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.5.6;
 
 import "./user/User.sol";
 import "../util/StringUtil.sol";
 
-contract Anarik is User{
+/**
+ * @author Ivan Pillay
+ * @title Stores market data and related functions
+ */
+contract Anarik {
 
   using StringUtil for string;
+
+  User internal contUser;
 
   // Simple Item/Good in the market
   struct Item {
@@ -27,6 +33,10 @@ contract Anarik is User{
   Item[] private _items;
   uint256 getStoreItemIndex = 0;
 
+  constructor(address _userContractAddr) public {
+    contUser = User(_userContractAddr);
+  }
+
   /// Fallback function
   function() external payable {}
 
@@ -46,12 +56,12 @@ contract Anarik is User{
   ) public
   {
     Item memory temp = Item({
-      _active : true,
-      name : _name,
-      description : _description,
-      price : _price,
-      available : false,
-      owner : _owner
+      _active: true,
+      name: _name,
+      description: _description,
+      price: _price,
+      available: false,
+      owner: _owner
     });
     _items.push(temp);
   }
@@ -69,26 +79,35 @@ contract Anarik is User{
   function updateItem(
     string memory _name,
     string memory _description,
-    uint256 _price,
+    int256 _price,
     bool _available,
     uint256 _index,
-    string memory _username,
+    bytes32 _username,
     string memory _password
   ) public
   {
+    address _acc;
+    string memory _passwd;
+    (,,,_acc,,_passwd) = contUser.userMap(_username);
     require(
-      (userMap[_username].account ==  _items[_index].owner) &&
-      (keccak256(bytes(userMap[_username].passwd)) == keccak256(bytes(_password))),
+      ( _acc ==  _items[_index].owner) &&
+      (keccak256(bytes(_passwd)) == keccak256(bytes(_password))),
       "Unauthorised access"
     );
     Item storage tmp = _items[_index];
-    tmp.name = _name;
-    tmp.description = _description;
-    tmp.price = _price;
+    if(bytes(_name).length != 0)
+      tmp.name = _name;
+    if(bytes(_description).length != 0)
+      tmp.description = _description;
+    if(_price >= 0)
+      tmp.price = uint256(_price);
     tmp.available = _available;
   }
 
-  /* Check if _index is valid within _items' array */
+  /**
+   * @dev Check if _index is valid within _items' array
+   * @param _index index of market item in _items
+   */
   modifier checkIndex(uint256 _index){
     require((_index < _items.length) && (_index >= 0),"Invalid index");
     _;
@@ -131,11 +150,14 @@ contract Anarik is User{
     );
     tmp.available = false;
     tmp.owner = _buyer;
-    addLog(addrUserMap[_buyer],_buyer_log);
-    addLog(addrUserMap[_seller],_seller_log);
+    contUser.addLog(contUser.addrUserMap(_buyer),_buyer_log);
+    contUser.addLog(contUser.addrUserMap(_seller),_seller_log);
   }
 
-  /* Returns total items in _items array */
+  /**
+   * @dev Returns total items in _items array
+   * @return total elements in _items
+   */
   function getItemCount() public view returns(uint256) {
     return _items.length;
   }
@@ -146,7 +168,7 @@ contract Anarik is User{
    * @param _index index of item in _itens
    * @return AFS, name, description and price of the item.
    */
-  function getUserStoreItem(string memory _ownername, uint256 _index)
+  function getUserStoreItem(bytes32 _ownername, uint256 _index)
    public
    view
    returns(
@@ -156,7 +178,7 @@ contract Anarik is User{
     uint256
    ) {
       require(
-        (keccak256(bytes(getUserNameFromAcc(_items[_index].owner))) == keccak256(bytes(_ownername))) &&
+        (keccak256(abi.encodePacked(contUser.getUserNameFromAcc(_items[_index].owner))) == keccak256(abi.encodePacked(_ownername))) &&
         (_items[_index]._active == true),
         "Not user owned item"
       );
@@ -177,22 +199,22 @@ contract Anarik is User{
    * @param _username current user
    * @return item name, description, price and seller name
    */
-  function getPublicMarketItem(uint256 _index, string memory _username)
+  function getPublicMarketItem(uint256 _index, bytes32 _username)
     public
     view
     returns(
       string memory,
       string memory,
       uint256,
-      string memory owner
+      bytes32
     ) {
 
-      string memory ownername = getUserNameFromAcc(_items[_index].owner);
+      bytes32 ownername = contUser.getUserNameFromAcc(_items[_index].owner);
 
       require(
         (_items[_index].available == true) &&
         (_items[_index]._active == true) &&
-        (keccak256(bytes(ownername)) != keccak256(bytes(_username))),
+        (keccak256(abi.encodePacked(ownername)) != keccak256(abi.encodePacked(_username))),
         "Item not available on market"
       );
 
@@ -217,12 +239,12 @@ contract Anarik is User{
    view
    returns(
     address,
-    string memory,
+    bytes32,
     string memory,
     string memory,
     uint256
    ) {
-     string memory ownername = getUserNameFromAcc(_items[_index].owner);
+     bytes32 ownername = contUser.getUserNameFromAcc(_items[_index].owner);
 
      require(
        (_items[_index]._active == true),

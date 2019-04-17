@@ -1,5 +1,8 @@
 pragma solidity ^0.5.2;
 
+import "./ERC20Intf.sol";
+import "../../math/SafeMath.sol";
+
 /**
 * @title Standard ERC20 token
 *
@@ -13,10 +16,7 @@ pragma solidity ^0.5.2;
 * compliant implementations may not do it.
 */
 
-// import "./token/ERC20/ERC20Interface.sol";
-import "../../math/SafeMath.sol";
-
-contract ERC20  {
+contract ERC20 is ERC20Intf {
 
   using SafeMath for uint256;
 
@@ -37,7 +37,7 @@ contract ERC20  {
   event Approval(address indexed tokenOwner, address indexed spender, uint256 tokens);
 
   /**
-   * Set total number of available tokens in the pool.
+   * @dev Set total number of available tokens in the pool
    * @param _totalTokens total number of tokens available
    */
   constructor(uint256 _totalTokens, address _admin) public {
@@ -45,7 +45,9 @@ contract ERC20  {
     _balances[_admin] = _totalTokens; //address of admin\
   }
 
-  /* Total number of tokens in existence */
+  /**
+   * @return Total number of tokens in existence
+   */
   function totalSupply() public view returns (uint256) {
       return _totalSupply;
   }
@@ -204,7 +206,9 @@ contract ERC20  {
       emit Approval(account, msg.sender, _allowed[account][msg.sender]);
   }
 
-  /* Return token name */
+  /**
+   * @return token name
+   */
   function getTokenName() public pure returns(string memory){
     return name;
   }

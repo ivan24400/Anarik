@@ -4,9 +4,9 @@ import "./ERC20/ERC20.sol";
 
 contract Snail is ERC20 {
 
-  address private _adminAddr = address(1); // admin's address
-  string private _adminName = "light";
-  string private _adminPasswd = "dark";
+  address private _adminAddr = address(1); // admin's default address
+  string private _adminName = "light"; // admin's default username
+  string private _adminPasswd = "dark"; // admin's default password
 
   // List of users who have sent request.
   address[] private _tokenRequestArr;
@@ -21,6 +21,7 @@ contract Snail is ERC20 {
     // User Name
     string username;
   }
+
   // Map of token requests
   mapping( address => TokenValue ) private _tokenRequestMap;
 
@@ -38,7 +39,10 @@ contract Snail is ERC20 {
   /// Fallback function
   function() external payable {}
 
-  /* Check if token exists for a given user */
+  /**
+   * @dev Check if token exists for a given user
+   * @param _user user account address
+   */
   modifier checkTokenRequest(address _user){
     require(_tokenRequestMap[_user]._active,"Token does not exist");
     _;
@@ -60,10 +64,13 @@ contract Snail is ERC20 {
   returns(bool)
   {
     TokenValue storage tc = _tokenRequestMap[_user];
-    tc._active = true;
     tc.value = _tokenCount;
     tc.username = _username;
-    tc.index = (_tokenRequestArr.push(_user) - 1);
+    // Overwrite an existing request if it exist
+    if(!_tokenRequestMap[_user]._active) {
+      tc.index = (_tokenRequestArr.push(_user) - 1);
+      tc._active = true;
+    }
   }
 
   /**
@@ -84,12 +91,17 @@ contract Snail is ERC20 {
       );
     }
 
-  /* Get total number of tokens added into the mapping */
+  /**
+   * @dev Get total number of tokens added into the mapping
+   * @return total elements in tokenRequestArr
+   */
   function getTokenRequestCount() public view returns(uint256){
     return _tokenRequestArr.length;
   }
 
-  /* Return admin's account address */
+  /**
+   * @return admin's account address
+   */
   function getAdminAddress() public view returns(address){
     return _adminAddr;
   }
@@ -128,14 +140,18 @@ contract Snail is ERC20 {
 
   /**
    * @dev Give tokens to a user
-   * @param _user token receiver.
+   * @param _sender token sender
+   * @param _receipient token receiver.
    * @param _value number of tokens.
    */
-  function donateTokens(address _user, uint256 _value) public{
-    _transfer(_adminAddr,_user,_value);
+  function donateTokens(address _sender, address _receipient, uint256 _value) public {
+    _transfer(_sender, _receipient, _value);
   }
 
-  /* Reject a token request */
+  /**
+   * @dev Reject a token request
+   * @param _index index of token in token request array
+   */
   function rejectRequestAt(uint256 _index) public checkTokenRequest(_tokenRequestArr[_index]){
     _delTokenRequest(_tokenRequestArr[_index]);
   }
@@ -155,12 +171,19 @@ contract Snail is ERC20 {
     _transfer(_from, _to, _value);
   }
 
-  /* Delete a token of given user*/
+  /**
+   * @dev Delete a token of given user
+   * @param _user user account address
+   */
   function _delTokenRequest(address _user)
   internal
   checkTokenRequest(_user)
   {
-    _tokenRequestArr[_tokenRequestMap[_user].index] = _tokenRequestArr[_tokenRequestArr.length - 1];
-    delete _tokenRequestMap[_user];
+    if(_tokenRequestMap[_user].index != (_tokenRequestArr.length - 1)) {
+      _tokenRequestMap[_tokenRequestArr[_tokenRequestArr.length - 1]].index = _tokenRequestMap[_user].index;
+      _tokenRequestArr[_tokenRequestMap[_user].index] = _tokenRequestArr[_tokenRequestArr.length - 1];
+    }
+    delete _tokenRequestArr[_tokenRequestArr.length - 1];
+    _tokenRequestArr.length = _tokenRequestArr.length - 1;
   }
 }

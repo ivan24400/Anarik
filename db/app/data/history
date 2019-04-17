@@ -1,2 +1,12 @@
 eth.accounts
 eth.getBalance("0xf4595efe779b65bd61034b47eb2e4098e57b2ce8")
+miner.start()
+miner.start()miner.stop
+miner.stop()
+eth.getBlockNumber
+eth.getBlockNumber()
+eth.getBlockTransactionCount()
+eth.getBlockNumber()
+eth.getBlock()
+eth.getBlock('pending')
+eth.getBlock('latest')

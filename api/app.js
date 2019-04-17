@@ -1,21 +1,21 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var cookieSession = require('cookie-session');
-var logger = require('morgan');
-var session = require('express-session');
-var bodyParser = require('body-parser');
+let createError = require('http-errors');
+let express = require('express');
+let path = require('path');
+let cookieParser = require('cookie-parser');
+let cookieSession = require('cookie-session');
+let logger = require('morgan');
+let session = require('express-session');
+let bodyParser = require('body-parser');
 
 //Routes
-var indexRouter = require('./routes/index');
-var userRouter = require('./routes/user');
-var storeRouter = require('./routes/store');
-var adminRouter = require('./routes/admin');
-var marketRouter = require('./routes/market');
-var contractRouter = require('./routes/contract');
+let indexRouter = require('./routes/index');
+let userRouter = require('./routes/user/user');
+let storeRouter = require('./routes/store');
+let adminRouter = require('./routes/admin');
+let marketRouter = require('./routes/market');
+let contractRouter = require('./routes/contract');
 
-var app = express();
+let app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

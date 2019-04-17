@@ -1,5 +1,9 @@
 pragma solidity ^0.5.2;
 
+/**
+ * @author Ivan Pillay
+ * @title Utility functions for string datatype
+ */
 library StringUtil {
   /**
    * @dev Concatenates two strings

@@ -32,3 +32,71 @@
 10:55:16.074100 table@compaction committed F-1 S-164B Ke·0 D·1 T·143.0002ms
 10:55:16.075100 table@remove removed @5
 10:55:16.075100 table@remove removed @2
+=============== Apr 1, 2019 (IST) ===============
+11:05:15.464218 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+11:05:15.471222 version@stat F·[0 1] S·180B[0B 180B] Sc·[0.00 0.00]
+11:05:15.471222 db@open opening
+11:05:15.471222 journal@recovery F·1
+11:05:15.471222 journal@recovery recovering @6
+11:05:15.497257 memdb@flush created L0@9 N·1 S·164B "n:\x9a..seq,v6":"n:\x9a..seq,v6"
+11:05:15.497257 version@stat F·[1 1] S·344B[164B 180B] Sc·[0.25 0.00]
+11:05:15.523219 db@janitor F·4 G·0
+11:05:15.523219 db@open done T·51.9974ms
+11:11:44.401136 table@compaction L0·1 -> L1·1 S·344B Q·8
+11:11:44.488137 table@build created L1@12 N·2 S·180B "n:\x9a..seq,v6":"version,v1"
+11:11:44.488137 version@stat F·[0 1] S·180B[0B 180B] Sc·[0.00 0.00]
+11:11:44.543136 table@compaction committed F-1 S-164B Ke·0 D·1 T·142.0003ms
+11:11:44.544137 table@remove removed @9
+11:11:44.544137 table@remove removed @8
+12:17:30.073986 db@close closing
+12:17:30.106985 db@close done T·32.9993ms
+=============== Apr 1, 2019 (IST) ===============
+12:19:04.638823 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:19:04.665822 version@stat F·[0 1] S·180B[0B 180B] Sc·[0.00 0.00]
+12:19:04.665822 db@open opening
+12:19:04.665822 journal@recovery F·1
+12:19:04.665822 journal@recovery recovering @10
+12:19:04.756830 memdb@flush created L0@13 N·1 S·164B "n:\x9a..seq,v8":"n:\x9a..seq,v8"
+12:19:04.757822 version@stat F·[1 1] S·344B[164B 180B] Sc·[0.25 0.00]
+12:19:05.166823 db@janitor F·4 G·0
+12:19:05.166823 db@open done T·501.0023ms
+12:25:27.214100 table@compaction L0·1 -> L1·1 S·344B Q·10
+12:25:27.261099 table@build created L1@16 N·2 S·180B "n:\x9a..seq,v8":"version,v1"
+12:25:27.261099 version@stat F·[0 1] S·180B[0B 180B] Sc·[0.00 0.00]
+12:25:27.294098 table@compaction committed F-1 S-164B Ke·0 D·1 T·79.9992ms
+12:25:27.295100 table@remove removed @13
+12:25:27.295100 table@remove removed @12
+=============== Apr 1, 2019 (IST) ===============
+12:45:46.952097 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:45:46.988118 version@stat F·[0 1] S·180B[0B 180B] Sc·[0.00 0.00]
+12:45:46.988118 db@open opening
+12:45:46.988118 journal@recovery F·1
+12:45:46.989128 journal@recovery recovering @14
+12:45:47.024388 memdb@flush created L0@17 N·1 S·164B "n:\x9a..seq,v10":"n:\x9a..seq,v10"
+12:45:47.026370 version@stat F·[1 1] S·344B[164B 180B] Sc·[0.25 0.00]
+12:45:47.050022 db@janitor F·4 G·0
+12:45:47.050022 db@open done T·61.9043ms
+12:52:15.488592 table@compaction L0·1 -> L1·1 S·344B Q·12
+12:52:15.575593 table@build created L1@20 N·2 S·180B "n:\x9a..seq,v10":"version,v1"
+12:52:15.575593 version@stat F·[0 1] S·180B[0B 180B] Sc·[0.00 0.00]
+12:52:15.629592 table@compaction committed F-1 S-164B Ke·0 D·1 T·139.9983ms
+12:52:15.629592 table@remove removed @17
+12:52:15.630592 table@remove removed @16
+=============== Apr 1, 2019 (IST) ===============
+13:03:45.157904 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+13:03:45.158896 version@stat F·[0 1] S·180B[0B 180B] Sc·[0.00 0.00]
+13:03:45.158896 db@open opening
+13:03:45.158896 journal@recovery F·1
+13:03:45.158896 journal@recovery recovering @18
+13:03:45.170650 memdb@flush created L0@21 N·1 S·164B "n:\x9a..seq,v12":"n:\x9a..seq,v12"
+13:03:45.171616 version@stat F·[1 1] S·344B[164B 180B] Sc·[0.25 0.00]
+13:03:45.227294 db@janitor F·4 G·0
+13:03:45.227294 db@open done T·68.3978ms
+13:10:06.562340 table@compaction L0·1 -> L1·1 S·344B Q·14
+13:10:06.595341 table@build created L1@24 N·2 S·180B "n:\x9a..seq,v12":"version,v1"
+13:10:06.595341 version@stat F·[0 1] S·180B[0B 180B] Sc·[0.00 0.00]
+13:10:06.796340 table@compaction committed F-1 S-164B Ke·0 D·1 T·234ms
+13:10:06.797342 table@remove removed @21
+13:10:06.797342 table@remove removed @20
+14:45:13.784542 db@close closing
+14:45:13.796833 db@close done T·12.2911ms

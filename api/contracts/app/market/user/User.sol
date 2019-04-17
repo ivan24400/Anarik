@@ -1,18 +1,24 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.5.6;
 
 import "./UserIntf.sol";
 
-contract User is UserIntf {
+/**
+ * @author Ivan Pillay
+ * @title Stores user data and related functions
+ */
+contract User is UserIntf{
 
   struct UserData {
-    //internal delete flag
+    // internal delete flag
     bool _active;
-    //index in userArr
+    // admin access control
+    bool isAdmin;
+    // index in userArr
     uint256 index;
-    //user account address
+    // user account address
     address account;
     // username
-    string user;
+    bytes32 user;
     // password
     string passwd;
     // log entries
@@ -20,17 +26,40 @@ contract User is UserIntf {
   }
 
   // Map of username to User struct
-  mapping( string => UserData ) internal userMap;
+  mapping( bytes32 => UserData ) public userMap;
   // Map of user account address to username
-  mapping( address => string ) internal addrUserMap;
+  mapping( address => bytes32 ) public addrUserMap;
   // Array of username
-  string[] userArr;
+  bytes32[] internal userArr;
 
-  /* Check if user credentials are valid or not */
-  function verifyCredential(string memory _username, string memory _password) public view returns(bool) {
+  // Initialize a admin user
+  constructor (
+    bytes32 _adminName,
+    string memory _adminPasswd,
+    address _account
+  ) public {
+    // Add an admin user
+    UserData storage userData = userMap[_adminName];
+    userData._active = true;
+    userData.account = _account;
+    userData.isAdmin = true;
+    userData.user = _adminName;
+    userData.passwd = _adminPasswd;
+    userData.index = (userArr.push(_adminName) - 1);
+    addrUserMap[_account] = _adminName;
+
+  }
+
+  /**
+   * @dev Check if user credentials are valid
+   * @param _username username value of user credential
+   * @param _password password value of user credential
+   * @return A boolean indicating credential's validity
+   */
+  function verifyCredential(bytes32 _username, string memory _password) public view returns(bool) {
     require(
       (userMap[_username]._active == true) &&
-      (keccak256(bytes(userMap[_username].user)) == keccak256(bytes(_username))) &&
+      (keccak256(abi.encodePacked(userMap[_username].user)) == keccak256(abi.encodePacked(_username))) &&
       (keccak256(bytes(userMap[_username].passwd)) == keccak256(bytes(_password))),
       "Invalid credentials"
     );
@@ -38,13 +67,58 @@ contract User is UserIntf {
   }
 
   /**
+   * @dev Check if admin credentials are valid
+   * @param _username username value of admin credential
+   * @param _password password value of admin credential
+   * @return A boolean indicating credential's validity
+   */
+  function verifyAdminCredential(bytes32 _username, string memory _password) public view returns(bool) {
+    require(
+      (userMap[_username]._active) &&
+      (userMap[_username].isAdmin) &&
+      (keccak256(abi.encodePacked(userMap[_username].user)) == keccak256(abi.encodePacked(_username))) &&
+      (keccak256(bytes(userMap[_username].passwd)) == keccak256(bytes(_password))),
+      "Invalid credentials"
+    );
+    return true;
+  }
+
+  /**
+   * @dev Check if user exist
+   * @param _username username value of user's credential
+   * @return A boolean indicating if user exist
+   */
+   function isUserExist(bytes32 _username) external view returns(bool) {
+     require(userMap[_username]._active, "User does not exist");
+     return true;
+   }
+
+   /**
+    * @dev Check if user is admin
+    * @param _username username value of user's credential
+    * @return A boolean indicating if user exist
+    */
+    function isUserAdmin(bytes32 _username) external view returns(bool) {
+      require(
+        (userMap[_username].isAdmin) &&
+        (userMap[_username]._active),
+        "User is not admin"
+      );
+      return true;
+    }
+
+  /**
    * @dev Adds a new user to the application
    * @param _username Username
    * @param _account user account address
    * @param _password user account password
    */
-  function addUser(string memory _username, address _account, string memory _password) public {
-    require(userMap[_username]._active == false,"Username already exists !");
+  function addUser (
+    bytes32 _username,
+    address _account,
+    string calldata _password
+  ) external {
+    require(!userMap[_username]._active, "Username already taken");
 
     UserData storage userData = userMap[_username];
     userData._active = true;
@@ -54,47 +128,27 @@ contract User is UserIntf {
     userData.index = (userArr.push(_username) - 1);
     addrUserMap[_account] = _username;
 
-    emit UserEvent(address(this),"User logged in !");
+    emit UserEvent(msg.sender, _username, "added");
   }
 
   /**
-   * @dev Get user's account address
-   * @param _username User's username as used in credential.
-   * @return account(token's wallet) address
+   * @dev Updates user's password
+   * @param _username username value of user credential
+   * @param _oldPasswd user's existing password
+   * @param _newPasswd user's new password
    */
-  function getUserAccAddr(string memory _username) public view returns(address) {
-    return (userMap[_username].account);
-  }
+   function updatePasswd (
+     bytes32 _username,
+     string calldata _oldPasswd,
+     string calldata _newPasswd
+   ) external {
+     require(verifyCredential(_username, _oldPasswd));
 
-  /* Get total number of elements in userArr (Not necessarily total number of users !) */
-  function getUserCount() public view returns(uint256) {
-    return userArr.length;
-  }
+     UserData storage userData = userMap[_username];
+     userData.passwd = _newPasswd;
 
-  /* Return username stored at an index */
-  function getUserNameAt(uint256 _index) public view returns(string memory){
-    require(
-      (_index < userArr.length) &&
-      (_index >= 0) &&
-      (userMap[userArr[_index]]._active == true),
-      "Invalid index"
-    );
-    return userArr[_index];
-  }
-
-  /* Return username of the account holder */
-  function getUserNameFromAcc(address _addr) public view returns(string memory){
-    return addrUserMap[_addr];
-  }
-
-  /**
-   * @dev Return given user's password.
-   * @param _username User name
-   * @return _username's password
-   */
-  function getUserPassword(string memory _username) public view returns (string memory){
-    return userMap[_username].passwd;
-  }
+     emit UserEvent(msg.sender, _username, "updated");
+   }
 
   /**
    * @dev Delete a user
@@ -102,17 +156,78 @@ contract User is UserIntf {
    * @param _password password of the User which is to be deleted.
    * @return operation status
    */
-  function removeUser(string memory _username, string memory _password) public {
+  function removeUser (
+    bytes32 _username,
+    string calldata _password
+  ) external {
     require(verifyCredential(_username, _password));
 
     uint256 index = userMap[_username].index;
+
     if(index != (userArr.length - 1)){
       userArr[index] = userArr[userArr.length - 1];
       delete userArr[userArr.length - 1];
     }
+    userArr.length = userArr.length - 1;
     delete userMap[_username];
 
-    emit UserEvent(address(this),"User removed !");
+    emit UserEvent(msg.sender, _username, "removed");
+  }
+
+  /**
+   * @dev Get user's account address
+   * @param _username User's username as used in credential.
+   * @return account(token's wallet) address
+   */
+  function getUserAccAddr(bytes32 _username) public view returns(address) {
+    require(
+      userMap[_username]._active &&
+      ! userMap[_username].isAdmin,
+      "Invalid user"
+    );
+    return (userMap[_username].account);
+  }
+
+  /**
+   * @dev Get admin's account address
+   * @param _username User's username as used in credential
+   * @return account(token's wallet) address
+   */
+  function getAdminAccAddr(bytes32 _username, string memory _password) public view returns(address) {
+    require(verifyAdminCredential(_username, _password));
+    return (userMap[_username].account);
+  }
+
+  /**
+   * @return total number of elements in userArr
+   */
+  function getUserCount() public view returns(uint256) {
+    return userArr.length;
+  }
+
+  /**
+   * @dev Retrieve username stored at an index
+   * @param _index index in userArr
+   * @return username
+   */
+  function getUserNameAt(uint256 _index) public view returns(bytes32){
+    require(
+      (_index < userArr.length) &&
+      (_index >= 0) &&
+      (userMap[userArr[_index]].isAdmin) &&
+      (userMap[userArr[_index]]._active == true),
+      "Invalid index"
+    );
+    return userArr[_index];
+  }
+
+  /**
+   * @dev Return username of the account holder
+   * @param _addr user account address
+   * @return username
+   */
+  function getUserNameFromAcc(address _addr) public view returns(bytes32) {
+    return addrUserMap[_addr];
   }
 
   /**
@@ -121,18 +236,27 @@ contract User is UserIntf {
    * @param _info Information to be added to the log.
    * @return operation status
    */
-  function addLog(string memory _username, string memory _info) public {
+  function addLog(bytes32 _username, string memory _info) public {
     UserData storage data = userMap[_username];
     data.log.push(_info);
   }
 
-  /* Return user log */
-  function getLog(string memory _username, uint256 _index) public view returns (string memory){
+  /**
+   * @dev Return user log
+   * @param _username username value of user's credential
+   * @param _index index of the log
+   * @return A log entry
+   */
+  function getLog(bytes32 _username, uint256 _index) public view returns (string memory){
     return userMap[_username].log[_index];
   }
 
-  /* Get total log entries of a user */
-  function getLogCount(string memory _username) public view returns(uint256){
+  /**
+   * @dev Get total log entries of a user
+   * @param _username username value of user's credential
+   * @return total number of log entries
+   */
+  function getLogCount(bytes32 _username) public view returns(uint256){
     return userMap[_username].log.length;
   }
 }

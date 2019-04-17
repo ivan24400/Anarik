@@ -1,3 +1,5 @@
+let path = require('path');
+let errors = require(path.join(__dirname,'..', 'lib', 'errors.js'));
 /**
  * 'contracts' is a dictionary with following structure:
  * contracts['name'] = {
@@ -18,14 +20,12 @@ function reset(){
  * @param name fullname of the contract
  * @param web3Inst web3 instance associated with the contract
  * @param contInst instance of deployed contract
- * @param contAddr address at which contract is deployed
  */
-function addContract(name, web3Inst, contInst, contAddr, defaultAcc){
+function addContract(name, web3Inst, contInst){
   if(contracts == null) reset();
   contracts[name] = {
     web3: web3Inst,
     inst: contInst,
-    addr: contAddr,
     gas: web3Inst.eth.getBlock('latest').gasLimit
   }
 }
@@ -36,10 +36,10 @@ function addContract(name, web3Inst, contInst, contAddr, defaultAcc){
  * @return the contract object
  */
 function getContract(name){
-  if(name !== undefined && contracts[name] !== undefined){
+  if(contracts != null && name !== undefined && contracts[name] !== undefined){
     return contracts[name];
   }else{
-    throw new Error('Undefined contract');
+    throw new Error(errors.UNDEFINED_CONTRACT);
   }
 }
 

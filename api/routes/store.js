@@ -4,28 +4,30 @@ let path = require('path');
 
 let web3_helper = require('web3-helper');
 
-let connect = require(path.join(__dirname,'..', 'network', 'connect.js'));
-let app_config = require(path.join(__dirname, '..', 'network', 'config', 'app.js'));
-let tkn_config = require(path.join(__dirname, '..', 'network', 'config', 'token.js'));
+const connect = require(path.join(__dirname,'..', 'network', 'connect.js'));
+const appConfig = require(path.join(__dirname, '..', 'network', 'config', 'app.js'));
+const userConfig = require(path.join(__dirname, '..', 'network', 'config', 'user.js'));
+const tknConfig = require(path.join(__dirname, '..', 'network', 'config', 'token.js'));
 
 /** Get user store details */
-router.get('/',function(req,res,next){
-  let json_res = new Object();
-  json_res.success = false;
-  json_res.msg = "NA";
+router.get('/',(req, res, next) => {
+  let jsonRes = new Object();
+  jsonRes.success = false;
+  jsonRes.msg = "NA";
 
   if(req.session.user_account != null){
 
-    connect.get(app_config.name).inst.getItemCount(
-      {from: app_config.acc_address},
-      function(err1,result1){
+    //Get total item count in user store
+    connect.get(appConfig.name).inst.getItemCount(
+      {from: appConfig.acc_address},
+      (err1, result1) => {
       if(!err1){
         let item_count = parseInt(result1.toString());
-        json_res.success = true;
-        json_res.data = [];
+        jsonRes.success = true;
+        jsonRes.data = [];
 
         if(item_count === 0){
-          res.json(json_res);
+          res.json(jsonRes);
           return;
         }
 
@@ -34,26 +36,26 @@ router.get('/',function(req,res,next){
         let callback_resolve = function(){
           callback_resolve_index++;
           if(callback_resolve_index == item_count){
-            json_res.success = true;
-            res.json(json_res);
+            jsonRes.success = true;
+            res.json(jsonRes);
           }
         }
-          let itemListFlag = true;
-          for(let index = 0; index < item_count && itemListFlag; index++){
 
-                connect.get(app_config.name).inst.getUserStoreItem(
+        let itemListFlag = true;
+        for(let index = 0; index < item_count && itemListFlag; index++){
+          connect.get(appConfig.name).inst.getUserStoreItem(
                   req.session.username,
                   index,
-                  {from: app_config.acc_address},
-                  function(err2,result2)
+                  {from: appConfig.acc_address},
+                  (err2, result2) => 
                   {
                     if(!err2){
-                      json_res.data.push({
-                        "sale":result2[0],
-                        "index":index,
-                        "name":result2[1],
-                        "description":result2[2],
-                        "price":result2[3].toString()
+                      jsonRes.data.push({
+                        "sale": result2[0],
+                        "index": index,
+                        "name": result2[1],
+                        "description": result2[2],
+                        "price": result2[3].toString()
                       });
 
                     }else{
@@ -63,159 +65,182 @@ router.get('/',function(req,res,next){
                     }
                     callback_resolve();
                 });
-          }
+        }
       }else{
-        json_res.msg = "Failed to retrieve a user item count";
-        res.status(500).json(json_res);
+        jsonRes.msg = "Failed to retrieve a user item count";
+        res.status(500).json(jsonRes);
       }
     });
 
   }else{
-    json_res.msg = "Unauthorised";
-    res.status(401).json(json_res);
+    jsonRes.msg = "Unauthorised";
+    res.status(401).json(jsonRes);
   }
 });
 
 /** Add an item in the user store  */
-router.post('/item',function(req, res, next){
-  let json_res = new Object();
-  json_res.success = false;
-  json_res.msg = "NA";
+router.post('/item',(req, res, next) => {
+  let jsonRes = new Object();
+  jsonRes.success = false;
+  jsonRes.msg = "NA";
 
   if(req.session.user_account != null){
-    let gasEstimate = connect.get(app_config.name).inst.createItem.estimateGas(
+    let gasEstimate = connect.get(appConfig.name).inst.createItem.estimateGas(
       req.body.product_name,
       req.body.product_desc,
-      req.body.product_price.toString(),
+      req.body.product_price,
       req.session.user_account
     );
     gasEstimate = Math.round(gasEstimate + gasEstimate*0.4);
-    gasEstimate = app_config.DEFAULT_GAS * 3;
+    gasEstimate = appConfig.DEFAULT_GAS*3;
 
     web3_helper.sendRawTransaction(
-      connect.get(app_config.name).web3,
-      app_config.acc_pri_k,
-      app_config.acc_address,
+      connect.get(appConfig.name).web3,
+      appConfig.acc_pri_k,
+      appConfig.acc_address,
       null,
       gasEstimate,
-      app_config.acc_address,
-      connect.get(app_config.name).inst.addr,
-      connect.get(app_config.name).inst.createItem.getData(
+      appConfig.acc_address,
+      connect.get(appConfig.name).inst.address,
+      connect.get(appConfig.name).inst.createItem.getData(
         req.body.product_name,
         req.body.product_desc,
-        req.body.product_price.toString(),
+        req.body.product_price,
         req.session.user_account
       )
-    ).then(receipt => {
-      json_res.success = true;
-      json_res.msg = "Added item successfully";
-    }).catch(e => {
-      json_res.msg = "Unable to add item";
+    )
+    .then(receipt => {
+      jsonRes.success = true;
+      jsonRes.msg = "Added item successfully";
+    })
+    .catch(e => {
+      jsonRes.msg = "Unable to add item";
       res.status(500);
-    }).finally( () => {
-      res.json(json_res);
+    })
+    .finally( () => {
+      res.json(jsonRes);
     });
 
   }else{
-      json_res.msg = "Unauthorised";
-      res.status(401).json(json_res);
+      jsonRes.msg = "Unauthorised";
+      res.status(401).json(jsonRes);
     }
 });
 
 /** Update an item in the user's store */
-router.put('/item', function(req,res,next){
-  let json_res = new Object();
-  json_res.success = false;
-  json_res.msg = "NA";
+router.put('/item', (req, res, next) => {
+  let jsonRes = new Object();
+  jsonRes.success = false;
+  jsonRes.msg = "NA";
 
   if(req.session.username != null){
+    if(
+      req.body == null ||
+      Object.keys(req.body).length === 0 ||
+      req.body.product_index != null ||
+      !isNaN(req.body.product_index)
+    ){
+      //Default arguments
+      if(req.body.product_sale == null) req.body.product_sale = false;
+      if(req.body.product_name == null) req.body.product_name = "";
+      if(req.body.product_desc == null) req.body.product_desc = "";
+      if(req.body.product_price == null || isNaN(req.body.product_price)) req.body.product_price = -1;
 
-    let gasEstimate;
-    try{
-      gasEstimate = connect.get(app_config.name).inst.updateItem.estimateGas(
-        req.body.product_name,
-        req.body.product_desc,
-        req.body.product_price,
-        req.body.product_sale,
-        req.body.product_index,
-        req.session.username,
-        req.session.password
-      );
-      gasEstimate = Math.round(gasEstimate + gasEstimate*0.1);
-    }catch(e){
-      gasEstimate = app_config.DEFAULT_GAS;
-    }
+      //Estimate gas limit
+      let gasEstimate;
+      try{
+        gasEstimate = connect.get(appConfig.name).inst.updateItem.estimateGas(
+          req.body.product_name,
+          req.body.product_desc,
+          req.body.product_price,
+          req.body.product_sale,
+          req.body.product_index,
+          req.session.username,
+          req.session.password
+        );
+        gasEstimate = Math.round(gasEstimate + gasEstimate*0.1);
+      }catch(e){
+        gasEstimate = appConfig.DEFAULT_GAS;
+      }
 
-    web3_helper.sendRawTransaction(
-      connect.get(app_config.name).web3,
-      app_config.acc_pri_k,
-      app_config.acc_address,
-      null,
-      gasEstimate,
-      app_config.acc_address,
-      connect.get(app_config.name).inst.addr,
-      connect.get(app_config.name).inst.updateItem.getData(
-        req.body.product_name,
-        req.body.product_desc,
-        req.body.product_price,
-        req.body.product_sale,
-        req.body.product_index,
-        req.session.username,
-        req.session.password
+      web3_helper.sendRawTransaction(
+        connect.get(appConfig.name).web3,
+        appConfig.acc_pri_k,
+        appConfig.acc_address,
+        null,
+        gasEstimate,
+        appConfig.acc_address,
+        connect.get(appConfig.name).inst.address,
+        connect.get(appConfig.name).inst.updateItem.getData(
+          req.body.product_name,
+          req.body.product_desc,
+          req.body.product_price,
+          req.body.product_sale,
+          req.body.product_index,
+          req.session.username,
+          req.session.password
+        )
       )
-    ).then(receipt => {
-      json_res.success = true;
-      json_res.msg = "Updated item successfully";
-    }).catch(e => {
-      json_res.msg = "Unable to update item";
-      res.status(500);
-    }).finally( () => {
-      res.json(json_res);
-    });
-
-    }else{
-      res;
-      json_res.msg = "Unauthorised";
-      res.status(401).json(json_res);
+      .then(receipt => {
+        jsonRes.success = true;
+        jsonRes.msg = "Updated item successfully";
+      })
+      .catch(e => {
+        jsonRes.msg = "Unable to update item";
+        res.status(500);
+      })
+      .finally( () => {
+        res.json(jsonRes);
+      });
+    } else {
+      jsonRes.msg = "Insufficient arguments";
+      res.status(400).json(jsonRes);
+    }
+  }else{
+      jsonRes.msg = "Unauthorised";
+      res.status(401).json(jsonRes);
     }
 });
 
 /** Delete an item from the store  */
-router.delete('/item',function(req,res,next){
-  let json_res = new Object();
-  json_res.success = false;
-  json_res.msg = "NA";
+router.delete('/item',(req, res, next) => {
+  let jsonRes = new Object();
+  jsonRes.success = false;
+  jsonRes.msg = "NA";
 
   if(req.session.username != null){
 
-    let gasEstimate = connect.get(app_config.name).inst.deleteItem.estimateGas(
+    let gasEstimate = connect.get(appConfig.name).inst.deleteItem.estimateGas(
       req.body.product_index);
     gasEstimate = Math.round(gasEstimate + gasEstimate*0.4);
 
     web3_helper.sendRawTransaction(
-      connect.get(app_config.name).web3,
-      app_config.acc_pri_k,
-      app_config.acc_address,
+      connect.get(appConfig.name).web3,
+      appConfig.acc_pri_k,
+      appConfig.acc_address,
       null,
       gasEstimate,
-      app_config.acc_address,
-      connect.get(app_config.name).inst.addr,
-      connect.get(app_config.name).inst.deleteItem.getData(
+      appConfig.acc_address,
+      connect.get(appConfig.name).inst.address,
+      connect.get(appConfig.name).inst.deleteItem.getData(
         req.body.product_index
       )
-    ).then(receipt => {
-      json_res.success = true;
-      json_res.msg = "Deleted successfully";
-    }).catch(e => {
-      json_res.msg = "Deletion failed";
+    )
+    .then(receipt => {
+      jsonRes.success = true;
+      jsonRes.msg = "Deleted successfully";
+    })
+    .catch(e => {
+      jsonRes.msg = "Deletion failed";
       res.status(500);
-    }).finally( () => {
-      res.json(json_res);
+    })
+    .finally( () => {
+      res.json(jsonRes);
     });
 
   }else{
-    json_res.msg = "Unauthorised";
-    res.status(401).json(json_res);
+    jsonRes.msg = "Unauthorised";
+    res.status(401).json(jsonRes);
   }
 });
 
