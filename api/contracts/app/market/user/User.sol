@@ -1,4 +1,4 @@
-pragma solidity ^0.5.6;
+pragma solidity ^0.5.2;
 
 import "./UserIntf.sol";
 
@@ -30,7 +30,7 @@ contract User is UserIntf{
   // Map of user account address to username
   mapping( address => bytes32 ) public addrUserMap;
   // Array of username
-  bytes32[] internal userArr;
+  bytes32[] public userArr;
 
   // Initialize a admin user
   constructor (
@@ -47,7 +47,7 @@ contract User is UserIntf{
     userData.passwd = _adminPasswd;
     userData.index = (userArr.push(_adminName) - 1);
     addrUserMap[_account] = _adminName;
-
+    emit UserEvent(msg.sender, _adminName, "created");
   }
 
   /**
@@ -88,7 +88,7 @@ contract User is UserIntf{
    * @param _username username value of user's credential
    * @return A boolean indicating if user exist
    */
-   function isUserExist(bytes32 _username) external view returns(bool) {
+   function isUserExist(bytes32 _username) public view returns(bool) {
      require(userMap[_username]._active, "User does not exist");
      return true;
    }
@@ -98,7 +98,7 @@ contract User is UserIntf{
     * @param _username username value of user's credential
     * @return A boolean indicating if user exist
     */
-    function isUserAdmin(bytes32 _username) external view returns(bool) {
+    function isUserAdmin(bytes32 _username) public view returns(bool) {
       require(
         (userMap[_username].isAdmin) &&
         (userMap[_username]._active),
@@ -116,8 +116,8 @@ contract User is UserIntf{
   function addUser (
     bytes32 _username,
     address _account,
-    string calldata _password
-  ) external {
+    string memory _password
+  ) public {
     require(!userMap[_username]._active, "Username already taken");
 
     UserData storage userData = userMap[_username];
@@ -139,9 +139,9 @@ contract User is UserIntf{
    */
    function updatePasswd (
      bytes32 _username,
-     string calldata _oldPasswd,
-     string calldata _newPasswd
-   ) external {
+     string memory _oldPasswd,
+     string memory _newPasswd
+   ) public {
      require(verifyCredential(_username, _oldPasswd));
 
      UserData storage userData = userMap[_username];
@@ -158,8 +158,8 @@ contract User is UserIntf{
    */
   function removeUser (
     bytes32 _username,
-    string calldata _password
-  ) external {
+    string memory _password
+  ) public {
     require(verifyCredential(_username, _password));
 
     uint256 index = userMap[_username].index;

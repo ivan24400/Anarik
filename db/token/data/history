@@ -1,3 +1,5 @@
 miner.start()
 miner.stop()
 eth.getBlock('latest').gasLimit
+miner.start()
+miner.stop()

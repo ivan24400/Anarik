@@ -21,8 +21,8 @@ function reset(){
 
 /**
  * Add named instance in the list
- * @param name name of the instance
- * @param instance instance of deployed contract
+ * @param {string} name name of the instance
+ * @param {Object} instance instance of deployed contract
  */
 function addInstance(name, instance){
   contracts[name] = instance;

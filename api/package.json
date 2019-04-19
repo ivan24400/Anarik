@@ -24,5 +24,9 @@
     "web3": "^0.20.7",
     "web3-helper": "file:local_modules/web3-helper",
     "web3-utils": "^1.0.0-beta.46"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "eslint-config-google": "^0.12.0"
   }
 }

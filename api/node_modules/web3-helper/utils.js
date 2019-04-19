@@ -1,20 +1,20 @@
-let keythereum = require('keythereum');
+const keythereum = require('keythereum');
 
 /**
  * Generate a random solidity address value
- * @param keyBytes number of bytes in private key (optional)
- * @param ivBytes number of bytes in initialization vector (optional)
- * @return A ethereum address value
+ * @param {number} keyBytes - number of bytes in private key (optional)
+ * @param {number} ivBytes number of bytes in initialization vector (optional)
+ * @return {string} A ethereum address value
  */
-function getRandomAddress(keyBytes, ivBytes){
-  let params = {
+function getRandomAddress(keyBytes, ivBytes) {
+  const params = {
     keyBytes: (keyBytes ? keyBytes : 32),
-    ivBytes: (ivBytes ? ivBytes : 16)
+    ivBytes: (ivBytes ? ivBytes : 16),
   };
-  let dk = keythereum.create(params);
+  const dk = keythereum.create(params);
   return keythereum.privateKeyToAddress(dk.privateKey);
 }
 
 module.exports = {
-  getRandomAddress: getRandomAddress
-}
+  getRandomAddress: getRandomAddress,
+};
