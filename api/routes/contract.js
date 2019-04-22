@@ -7,9 +7,9 @@ const connect = require(path.join(__dirname, '..', 'network', 'connect.js'));
 const loader = require(path.join(__dirname, '..', 'network', 'loader.js'));
 const deploy = require(path.join(__dirname, '..', 'network', 'deploy.js'));
 
-const appConfig = require(path.join(__dirname, '..', 'network', 'config', 'app.js'));
-const userConfig = require(path.join(__dirname, '..', 'network', 'config', 'user.js'));
-const tknConfig = require(path.join(__dirname, '..', 'network', 'config', 'token.js'));
+const appConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'app.js'));
+const userConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'user.js'));
+const tknConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'token.js'));
 
 /** Deploy all contracts to blockchain */
 router.post('/deploy', (req, res, next) => {

@@ -1,13 +1,12 @@
 pragma solidity ^0.5.2;
 
 import "./user/User.sol";
-// import "../util/StringUtil.sol";
 
 /**
  * @author Ivan Pillay
  * @title Stores market data and related functions
  */
-contract Anarik is User {
+contract Anarik {
   
   // using StringUtil for string;
 
@@ -31,9 +30,10 @@ contract Anarik is User {
   Item[] private _items;
   uint256 getStoreItemIndex = 0;
 
-  constructor(bytes32 _adminName, string memory _adminPass, address _userContractAddr)
-   User(_adminName, _adminPass, _userContractAddr) public {
-    // contUser = User(_userContractAddr);
+  User internal contUser;
+
+  constructor(address _userContractAddr) public {
+    contUser = User(_userContractAddr);
   }
 
   /// Fallback function
@@ -78,19 +78,21 @@ contract Anarik is User {
   function updateItem(
     string memory _name,
     string memory _description,
-    int256 _price,
+    uint256 _price,
     bool _available,
     uint256 _index,
     bytes32 _username,
     string memory _password
   ) public
   {
-    // address _acc;
-    // string memory _passwd;
-    UserData memory _ud = userMap[_username];
+
+    address _acc;
+    string memory _passwd;
+
+    (,,,_acc,,_passwd) = contUser.userMap(_username);
     require(
-      ( _ud.account ==  _items[_index].owner) &&
-      (keccak256(bytes(_ud.passwd)) == keccak256(bytes(_password))),
+      (_acc ==  _items[_index].owner) &&
+      (keccak256(bytes(_passwd)) == keccak256(bytes(_password))),
       "Unauthorised access"
     );
     Item storage tmp = _items[_index];
@@ -149,8 +151,8 @@ contract Anarik is User {
     );
     tmp.available = false;
     tmp.owner = _buyer;
-    addLog(addrUserMap[_buyer],_buyer_log);
-    addLog(addrUserMap[_seller],_seller_log);
+    contUser.addLog(contUser.addrUserMap(_buyer), _buyer_log);
+    contUser.addLog(contUser.addrUserMap(_seller), _seller_log);
   }
 
   /**
@@ -177,7 +179,7 @@ contract Anarik is User {
     uint256
    ) {
       require(
-        (keccak256(abi.encodePacked(getUserNameFromAcc(_items[_index].owner))) == keccak256(abi.encodePacked(_ownername))) &&
+        (keccak256(abi.encodePacked(contUser.getUserNameFromAcc(_items[_index].owner))) == keccak256(abi.encodePacked(_ownername))) &&
         (_items[_index]._active == true),
         "Not user owned item"
       );
@@ -208,7 +210,7 @@ contract Anarik is User {
       bytes32
     ) {
 
-      bytes32 ownername = getUserNameFromAcc(_items[_index].owner);
+      bytes32 ownername = contUser.getUserNameFromAcc(_items[_index].owner);
 
       require(
         (_items[_index].available == true) &&
@@ -243,7 +245,7 @@ contract Anarik is User {
     string memory,
     uint256
    ) {
-     bytes32 ownername = getUserNameFromAcc(_items[_index].owner);
+     bytes32 ownername = contUser.getUserNameFromAcc(_items[_index].owner);
 
      require(
        (_items[_index]._active == true),

@@ -6,17 +6,17 @@ const web3Helper = require('web3-helper');
 
 const connect = require(path.join(__dirname, 'connect.js'));
 // const loader = require(path.join(__dirname, 'loader.js'));
-const compiler = require(path.join(__dirname, 'compiler.js'));
+const compiler = require(path.join(__dirname, '..', 'contracts', 'compiler.js'));
 
-const appConfig = require(path.join(__dirname, 'config', 'app.js'));
-// const userConfig = require(path.join(__dirname, 'config', 'user.js'));
-const tknConfig = require(path.join(__dirname, 'config', 'token.js'));
+const appConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'app.js'));
+const userConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'user.js'));
+const tknConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'token.js'));
 
 
-const appInfoFilePath = path.join(__dirname, 'info', 'app.js');
-const tokenInfoFilePath = path.join(__dirname, 'info', 'token.js');
+const appInfoFilePath = path.join(__dirname, '..', 'config', 'contracts', 'load', 'app.json');
+const userInfoFilePath = path.join(__dirname, '..', 'config', 'contracts', 'load', 'user.json');
+const tokenInfoFilePath = path.join(__dirname, '..', 'config', 'contracts', 'load', 'token.json');
 
-const TOTAL_TOKENS = 2400000;
 let adminAddress;
 /**
  * Contract deployment template
@@ -72,7 +72,11 @@ function deployRt(
       gasEstimate,
       fromAddr,
       null,
-      (contArgs == null ? _cont.new.getData({data: bytecode}) : _cont.new.getData(...contArgs, {data: bytecode}))
+      (
+        contArgs == null ?
+          _cont.new.getData({data: bytecode}) :
+          _cont.new.getData(...contArgs, {data: bytecode})
+      )
     ).then( receipt => {
       const contAddr = receipt.contractAddress;
       const contInst = _cont.at(contAddr);
@@ -107,35 +111,34 @@ function deployRt(
  * @return {Object} A promise object
  */
 function deployApp() {
-
   return new Promise(async (resolve, reject) => {
     const web3App = new Web3(new Web3.providers.HttpProvider(appConfig.provider));
     if (web3App.isConnected()) {
       web3App.eth.defaultAccount = appConfig.acc_address;
 
       const contCompiled = compiler.compileApp();
-      // const userCompiled = compiler.compileUser();
+      const userCompiled = compiler.compileUser();
       if (contCompiled) {
         try {
           adminAddress = web3Helper.getRandomAddress();
           console.log(`Admin account address ${adminAddress}`);
           // Deploy user contract
-          // const userContAddr = await deployRt(
-          //   web3App,
-          //   userConfig.name,
-          //   [connect._admin, connect._admin_pass, web3Helper.getRandomAddress()],
-          //   userCompiled.User.User.evm.bytecode.object,
-          //   userCompiled.User.User.evm.gasEstimates.creation.totalCost,
-          //   userCompiled.User.User.abi,
-          //   userConfig.acc_address,
-          //   userConfig.acc_pri_k,
-          //   userInfoFilePath
-          // );
+          const userContAddr = await deployRt(
+            web3App,
+            userConfig.name,
+            [userConfig.adminName, userConfig.adminPasswd, web3Helper.getRandomAddress()],
+            userCompiled.User.User.evm.bytecode.object,
+            userCompiled.User.User.evm.gasEstimates.creation.totalCost,
+            userCompiled.User.User.abi,
+            userConfig.acc_address,
+            userConfig.acc_pri_k,
+            userInfoFilePath
+          );
           // Deploy Anarik contract
           await deployRt(
             web3App,
             appConfig.name,
-            [connect._admin, connect._admin_pass, web3Helper.getRandomAddress()],
+            [userContAddr], // [userConfig.adminName, userConfig.adminPasswd, web3Helper.getRandomAddress()],
             contCompiled.Anarik.Anarik.evm.bytecode.object,
             contCompiled.Anarik.Anarik.evm.gasEstimates.creation.totalCost,
             contCompiled.Anarik.Anarik.abi,
@@ -175,7 +178,7 @@ function deployToken(totalTokens) {
           await deployRt(
             web3Tkn,
             tknConfig.name,
-            [(totalTokens == null ? TOTAL_TOKENS : totalTokens), adminAddress],
+            [(totalTokens == null ? tknConfig.TOTAL_TOKENS : totalTokens), adminAddress],
             contCompiled.Snail.Snail.evm.bytecode.object,
             contCompiled.Snail.Snail.evm.gasEstimates.creation.totalCost,
             contCompiled.Snail.Snail.abi,

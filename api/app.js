@@ -1,21 +1,20 @@
-let createError = require('http-errors');
-let express = require('express');
-let path = require('path');
-let cookieParser = require('cookie-parser');
-let cookieSession = require('cookie-session');
-let logger = require('morgan');
-let session = require('express-session');
-let bodyParser = require('body-parser');
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+const session = require('express-session');
+const bodyParser = require('body-parser');
 
-//Routes
-let indexRouter = require('./routes/index');
-let userRouter = require('./routes/user/user');
-let storeRouter = require('./routes/store');
-let adminRouter = require('./routes/admin');
-let marketRouter = require('./routes/market');
-let contractRouter = require('./routes/contract');
+// Routes
+const indexRouter = require('./routes/index');
+const userRouter = require('./routes/user');
+const storeRouter = require('./routes/store');
+const adminRouter = require('./routes/admin');
+const marketRouter = require('./routes/market');
+const contractRouter = require('./routes/contract');
 
-let app = express();
+const app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -23,23 +22,24 @@ app.set('view engine', 'ejs');
 
 app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({extended: false}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 
 app.use(cookieParser());
-var MemoryStore = session.MemoryStore;
+const MemoryStore = session.MemoryStore;
 app.use(session({
-    name:'shession',
-    secret: 'grasshopper',
-    resave: true,
-    saveUninitialized: true,
-    store : new MemoryStore(),
-    cookie : {maxAge: 2*60*60*1000, httpOnly: true, secure: false}
+  name: 'shession',
+  secret: 'grasshopper',
+  resave: true,
+  saveUninitialized: true,
+  store: new MemoryStore(),
+  cookie: {maxAge: 2*60*60*1000, httpOnly: true, secure: false},
 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
+// // HTTP request body/params logger
 // app.use(function (req,res,next){
 //   console.log('Logger ==');
 //   console.log("req.body");console.log(req.body);

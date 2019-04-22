@@ -6,7 +6,7 @@ import "./UserIntf.sol";
  * @author Ivan Pillay
  * @title Stores user data and related functions
  */
-contract User is UserIntf{
+contract User is UserIntf {
 
   struct UserData {
     // internal delete flag

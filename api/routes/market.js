@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 
-const web3_helper = require('web3-helper');
+const web3Helper = require('web3-helper');
 
-const connect = require(path.join(__dirname,'..', 'network', 'connect.js'));
-const appConfig = require(path.join(__dirname, '..', 'network', 'config', 'app.js'));
-const tknConfig = require(path.join(__dirname, '..', 'network', 'config', 'token.js'));
+const connect = require(path.join(__dirname, '..', 'network', 'connect.js'));
+const appConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'app.js'));
+const tknConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'token.js'));
 
 /** Market Details */
 router.get('/', (req, res, next) => {
@@ -22,11 +22,10 @@ router.get('/', (req, res, next) => {
       (err, result) => {
         if (!err) {
           const itemCount = parseInt(result.toString());
-  
+
           const promItems = [];
-  
+
           for (let index=0; index < itemCount; index++) {
-  
             promItems.push(
               new Promise(function(resolve) {
                 connect.get(appConfig.name).inst.getPublicMarketItem(
@@ -82,16 +81,14 @@ router.post('/buy-item', (req, res, next) => {
             req.session.user_account,
             {from: tknConfig.acc_address},
             (err2, result2) => {
-   
               if (!err2) {
                 // if item price <= balance of user
                 const itemPrice = parseInt(result1[4].toString());
                 if (itemPrice <= parseInt(result2.toString())) {
-                 
                   const sellerName = result1[1];
                   const buyerAddr = req.session.user_account;
                   const sellerAddr = result1[0];
-   
+
                   // Send tokens
                   let gasLimit = parseInt(connect.get(tknConfig.name).inst.sendTokens.estimateGas(
                     sellerAddr,
@@ -99,10 +96,10 @@ router.post('/buy-item', (req, res, next) => {
                     itemPrice,
                     {from: tknConfig.acc_address}
                   ));
-   
+
                   gasLimit = Math.round(gasLimit + gasLimit*0.5);
-   
-                  web3_helper.sendRawTransaction(
+
+                  web3Helper.sendRawTransaction(
                     connect.get(tknConfig.name).web3,
                     tknConfig.acc_pri_k,
                     tknConfig.acc_address,
@@ -117,10 +114,9 @@ router.post('/buy-item', (req, res, next) => {
                     )
                   )
                     .then(receipt => {
-   
-                      const buyerLog = "P\u232c"+sellerName+"\u232c"+result1[2]+"\u232c"+result1[3]+"\u232c"+result1[4].toString();
-                      const sellerLog = "S\u232c"+req.session.username+"\u232c"+result1[2]+"\u232c"+result1[3]+"\u232c"+result1[4].toString();
-   
+                      const buyerLog = 'P\u232c'+sellerName+'\u232c'+result1[2]+'\u232c'+result1[3]+'\u232c'+result1[4].toString();
+                      const sellerLog = 'S\u232c'+req.session.username+'\u232c'+result1[2]+'\u232c'+result1[3]+'\u232c'+result1[4].toString();
+
                       const gasEstimate = connect.get(appConfig.name).inst.changeOwner.estimateGas(
                         buyerAddr,
                         buyerLog,
@@ -128,8 +124,8 @@ router.post('/buy-item', (req, res, next) => {
                         sellerLog,
                         itemIndex
                       );
-     
-                      web3_helper.sendRawTransaction(
+
+                      web3Helper.sendRawTransaction(
                         connect.get(appConfig.name).web3,
                         appConfig.acc_pri_k,
                         appConfig.acc_address,
