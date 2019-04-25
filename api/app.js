@@ -6,13 +6,15 @@ const logger = require('morgan');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 
+const simplifyError = require(path.join(__dirname, 'lib', 'error-simple.js'));
+
 // Routes
-const indexRouter = require('./routes/index');
-const userRouter = require('./routes/user');
-const storeRouter = require('./routes/store');
-const adminRouter = require('./routes/admin');
-const marketRouter = require('./routes/market');
-const contractRouter = require('./routes/contract');
+const indexRouter = require(path.join(__dirname, 'routes', 'index'));
+const userRouter = require(path.join(__dirname, 'routes', 'user'));
+const storeRouter = require(path.join(__dirname, 'routes', 'store'));
+const adminRouter = require(path.join(__dirname, 'routes', 'admin'));
+const marketRouter = require(path.join(__dirname, 'routes', 'market'));
+const contractRouter = require(path.join(__dirname, 'routes', 'contract'));
 
 const app = express();
 
@@ -67,9 +69,8 @@ app.use(function(err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
   console.log('Error', err);
-  // render the error page
   res.status(err.status || 500);
-  res.json({success: false, msg: 'Something failed'});
+  res.json(simplifyError(err));
 });
 
 module.exports = app;

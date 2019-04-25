@@ -1,6 +1,9 @@
 const gulp = require('gulp');
 const apidoc = require('gulp-apidoc');
 
+/**
+ * Generate api documentation
+ */
 gulp.task('apidoc', done => {
   apidoc({
     src: './routes',

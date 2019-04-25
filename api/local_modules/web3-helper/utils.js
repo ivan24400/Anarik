@@ -1,3 +1,8 @@
+/**
+ * Utility functions
+ * @requires keythereum
+ */
+
 const keythereum = require('keythereum');
 
 /**

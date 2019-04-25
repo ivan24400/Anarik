@@ -1,15 +1,23 @@
 /**
  * Manage user account(s)
- * @module controllers/user/actions
+ * @module app/controllers/user/actions
  * @requires local:web3-helper
+ * @requires path
  */
 const path = require('path');
 
 const web3Helper = require('web3-helper');
 
-const connect = require(path.join(__dirname, '..', '..', '..', 'network', 'connect.js'));
-const userConfig = require(path.join(__dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'user.js'));
-const tknConfig = require(path.join(__dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'token.js'));
+const contracts = require(path.join(
+  __dirname, '..', '..', '..', 'contracts', 'instance.js'
+));
+
+const userConfig = require(path.join(
+  __dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'user.js'
+));
+const tknConfig = require(path.join(
+  __dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'token.js'
+));
 
 module.exports = {
 
@@ -26,7 +34,7 @@ module.exports = {
     if (req.session.user_account != null) {
       if (req.body.tokenCount != null) {
         if (!isNaN(req.body.tokenCount)) {
-          let gasLimit = parseInt(connect.get(tknConfig.name).inst.addTokenRequest.estimateGas(
+          let gasLimit = parseInt(contracts.get(tknConfig.name).inst.addTokenRequest.estimateGas(
             req.session.username,
             req.session.user_account,
             req.body.tokenCount,
@@ -36,14 +44,14 @@ module.exports = {
           gasLimit = Math.round(gasLimit + gasLimit*0.3);
 
           web3Helper.sendRawTransaction(
-            connect.get(tknConfig.name).web3,
+            contracts.get(tknConfig.name).web3,
             tknConfig.acc_pri_k,
             tknConfig.acc_address,
             null,
             gasLimit,
             tknConfig.acc_address,
-            connect.get(tknConfig.name).inst.address,
-            connect.get(tknConfig.name).inst.addTokenRequest.getData(
+            contracts.get(tknConfig.name).inst.address,
+            contracts.get(tknConfig.name).inst.addTokenRequest.getData(
               req.session.username,
               req.session.user_account,
               req.body.tokenCount
@@ -85,7 +93,7 @@ module.exports = {
     if (req.session.username != null) {
       jsonRes.data = [];
 
-      connect.get(userConfig.name).inst.getLogCount(
+      contracts.get(userConfig.name).inst.getLogCount(
         req.session.username,
         {from: userConfig.acc_address},
         (err1, result1) => {
@@ -99,7 +107,7 @@ module.exports = {
             for (let index = 0; index < tokenCount && logListFlag; index++) {
               logProms.push(
                 new Promise(function(resolve) {
-                  connect.get(userConfig.name).inst.getLog(
+                  contracts.get(userConfig.name).inst.getLog(
                     req.session.username,
                     index,
                     {from: userConfig.acc_address},

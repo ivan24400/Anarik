@@ -1,6 +1,13 @@
+/**
+ * Send a signed transaction to the blockchain
+ * @requires ethereumjs-tx
+ * @requires web3-utils
+ * @requires path
+ */
 const Tx = require('ethereumjs-tx');
 const web3Utils = require('web3-utils');
 const path = require('path');
+
 const _utils = require(path.join(__dirname, 'utils.js'));
 
 /**
@@ -152,4 +159,4 @@ module.exports = {
   sendRawTransaction: sendRawTransaction,
   getTransactionReceiptMined: getTransactionReceiptMined,
   getRandomAddress: _utils.getRandomAddress,
-}
+};

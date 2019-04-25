@@ -1,8 +1,9 @@
 const express = require('express');
-const router = express.Router();
-
 const path = require('path');
+
 const storeCntlr = require(path.join(__dirname, '..', 'app', 'controllers', 'user', 'store.js'));
+
+const router = express.Router();
 
 /**
  * @api {get} /store Get user store details
@@ -12,7 +13,7 @@ const storeCntlr = require(path.join(__dirname, '..', 'app', 'controllers', 'use
  *
  * @apiSuccess {boolean} success operation status
  * @apiSuccess {string} msg NA
- * @apiSuccess {Object} data list of user's store items
+ * @apiSuccess {Object[]} data list of user's store items
  *
  * @apiUse UnauthorizedError
  */
@@ -30,7 +31,7 @@ router.get('/', storeCntlr.getUserStoreDetails);
  * @apiParam {boolean} productSale is item available for sale
  * @apiParam {number} productIndex item's index in database
  *
- * @apiSuccess {boolean} success operation status
+ * @apiSuccess {boolean} success true
  * @apiSuccess {string} msg Added item successfully
  *
  * @apiUse UnauthorizedError
@@ -49,7 +50,7 @@ router.post('/item', storeCntlr.addItem);
  * @apiParam {boolean} productSale is item available for sale
  * @apiParam {number} productIndex item's index in database
  *
- * @apiSuccess {boolean} success operation status
+ * @apiSuccess {boolean} success true
  * @apiSuccess {string} msg Updated item successfully
  *
  * @apiUse UnauthorizedError
@@ -68,7 +69,7 @@ router.put('/item', storeCntlr.updateItem);
  * @apiParam {boolean} productSale is item available for sale
  * @apiParam {number} productIndex item's index in database
  *
- * @apiSuccess {boolean} success operation status
+ * @apiSuccess {boolean} success true
  * @apiSuccess {string} msg Deleted item successfully
  *
  * @apiUse UnauthorizedError

@@ -27,3 +27,13 @@ eth.getTransaction()
 cls
 miner.stop()
 .exit
+miner.start()
+miner.stop()
+miner.start()
+miner.stop()
+miner.start()
+miner.stop()
+miner.start()
+miner.stop()
+miner.start()
+miner.stop()

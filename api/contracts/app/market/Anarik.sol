@@ -78,7 +78,7 @@ contract Anarik {
   function updateItem(
     string memory _name,
     string memory _description,
-    uint256 _price,
+    int256 _price,
     bool _available,
     uint256 _index,
     bytes32 _username,

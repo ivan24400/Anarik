@@ -42,7 +42,7 @@ contract ERC20 is ERC20Intf {
    */
   constructor(uint256 _totalTokens, address _admin) public {
     _totalSupply = _totalTokens;
-    _balances[_admin] = _totalTokens; //address of admin\
+    _balances[_admin] = _totalTokens; // admin has ownership of all tokens
   }
 
   /**

@@ -182,3 +182,65 @@
 17:52:16.844898 version@stat F·[2 2] S·3MiB[339KiB 2MiB] Sc·[0.50 0.03]
 17:52:16.931824 db@janitor F·6 G·0
 17:52:16.931824 db@open done T·135.3601ms
+=============== Apr 24, 2019 (IST) ===============
+11:33:56.261799 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+11:33:56.269136 version@stat F·[2 2] S·3MiB[339KiB 2MiB] Sc·[0.50 0.03]
+11:33:56.269136 db@open opening
+11:33:56.269136 journal@recovery F·1
+11:33:56.271141 journal@recovery recovering @45
+11:33:56.295656 memdb@flush created L0@47 N·255 S·15KiB "Dat..ion,v84042":"r\x00\x00..\x89\x98Z,v84292"
+11:33:56.298658 version@stat F·[3 2] S·3MiB[354KiB 2MiB] Sc·[0.75 0.03]
+11:33:56.413828 db@janitor F·7 G·0
+11:33:56.413828 db@open done T·144.6949ms
+11:33:57.427346 table@compaction L0·3 -> L1·2 S·3MiB Q·84299
+11:33:57.875264 table@build created L1@50 N·33653 S·2MiB "-p,..\xe6\xc2\u007f,v2":"h\x00\x00..\xc8'_,v19665"
+11:33:58.011157 table@build created L1@51 N·17284 S·1MiB "h\x00\x00..'_t,v19662":"\xdd\xe3\xf6..\xf2)\xd7,v84032"
+11:33:58.011157 version@stat F·[0 2] S·3MiB[0B 3MiB] Sc·[0.00 0.03]
+11:33:58.050092 table@compaction committed F-3 S-87KiB Ke·0 D·2959 T·622.7564ms
+11:33:58.050973 table@remove removed @47
+11:33:58.050973 table@remove removed @44
+11:33:58.082964 table@remove removed @41
+11:33:58.083964 table@remove removed @39
+11:33:58.084965 table@remove removed @40
+13:53:35.640903 db@close closing
+13:53:35.646901 db@close done T·6.998ms
+=============== Apr 24, 2019 (IST) ===============
+14:44:46.126735 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+14:44:46.127738 version@stat F·[0 2] S·3MiB[0B 3MiB] Sc·[0.00 0.03]
+14:44:46.127738 db@open opening
+14:44:46.127738 journal@recovery F·1
+14:44:46.130784 journal@recovery recovering @48
+14:44:46.198508 memdb@flush created L0@52 N·4589 S·256KiB "\x02\x17\x8f..\xe09S,v88886":"\xfd\x9aC..(9\xab,v88877"
+14:44:46.200487 version@stat F·[1 2] S·3MiB[256KiB 3MiB] Sc·[0.25 0.03]
+14:44:46.214500 db@janitor F·5 G·0
+14:44:46.214500 db@open done T·86.7628ms
+14:50:25.010531 table@compaction L0·1 -> L1·2 S·3MiB Q·89294
+14:50:25.120536 table@build created L1@55 N·34025 S·2MiB "\x02\x17\x8f..\xe09S,v88886":"h\x00\x00..\xbb\xb8\xcc,v18495"
+14:50:25.320531 table@build created L1@56 N·19466 S·1MiB "h\x00\x00..\xb8\xcct,v18492":"\xfd\x9aC..(9\xab,v88877"
+14:50:25.320531 version@stat F·[0 2] S·3MiB[0B 3MiB] Sc·[0.00 0.03]
+14:50:25.391532 table@compaction committed F-1 S-70KiB Ke·0 D·2035 T·381.0032ms
+14:50:25.391532 table@remove removed @52
+14:50:25.392530 table@remove removed @50
+14:50:25.392530 table@remove removed @51
+16:50:45.125423 db@close closing
+16:50:45.196453 db@close done T·72.0306ms
+=============== Apr 24, 2019 (IST) ===============
+16:52:27.334020 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+16:52:27.335991 version@stat F·[0 2] S·3MiB[0B 3MiB] Sc·[0.00 0.03]
+16:52:27.335991 db@open opening
+16:52:27.335991 journal@recovery F·1
+16:52:27.337991 journal@recovery recovering @53
+16:52:27.669019 memdb@flush created L0@57 N·11552 S·522KiB "0\x0e\xcb..`\x13M,v100429":"ꉳ..I\xe4\xb6,v100438"
+16:52:27.671019 version@stat F·[1 2] S·3MiB[522KiB 3MiB] Sc·[0.25 0.03]
+16:52:27.871985 db@janitor F·5 G·0
+16:52:27.871985 db@open done T·536.0011ms
+16:58:37.018200 table@compaction L0·1 -> L1·2 S·3MiB Q·100847
+16:58:37.312195 table@build created L1@60 N·36863 S·2MiB "\x02\x17\x8f..\xe09S,v88886":"h\x00\x00..q(\xc5,v53584"
+16:58:37.450194 table@build created L1@61 N·24646 S·1MiB "h\x00\x00..(\xc5t,v53581":"\xfd\x9aC..(9\xab,v88877"
+16:58:37.450194 version@stat F·[0 2] S·3MiB[0B 3MiB] Sc·[0.00 0.04]
+16:58:37.519191 table@compaction committed F-1 S-128KiB Ke·0 D·3534 T·500.9976ms
+16:58:37.519191 table@remove removed @57
+16:58:37.557192 table@remove removed @55
+16:58:37.558192 table@remove removed @56
+17:58:56.630774 db@close closing
+17:58:56.636813 db@close done T·6.0395ms

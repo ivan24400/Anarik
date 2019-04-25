@@ -21,13 +21,13 @@ module.exports = {
 //   'TOTAL_TOKENS': 2400000,
 // };
 
-// //Infura
+// // Infura
 // module.exports = {
-//   "name": "Snail",
-//   "provider": "https://ropsten.infura.io/v3/4912fbbd2aa342d5ade91b24d3ed0a57",
-//   "acc_address": "0xD078E3100c7399D1B3dEb450a5227fAd98c81D41",
-//   "acc_password": "thunderclap",
-//   "acc_pri_k": "B6AC20C1071813F1F06882636330B1682534AF267461C3176DFC8D8F7D1C121A",
-//   "DEFAULT_GAS": 5000000
+//   'name': 'Snail',
+//   'provider': 'https://ropsten.infura.io/v3/4912fbbd2aa342d5ade91b24d3ed0a57',
+//   'acc_address': '0xD078E3100c7399D1B3dEb450a5227fAd98c81D41',
+//   'acc_password': 'thunderclap',
+//   'acc_pri_k': 'B6AC20C1071813F1F06882636330B1682534AF267461C3176DFC8D8F7D1C121A',
+//   'DEFAULT_GAS': 5000000,
 //   'TOTAL_TOKENS': 2400000,
-// }
+// };

@@ -4,14 +4,10 @@ import "./ERC20/ERC20.sol";
 
 contract Snail is ERC20 {
 
-  address private _adminAddr = address(1); // admin's default address
-  string private _adminName = "light"; // admin's default username
-  string private _adminPasswd = "dark"; // admin's default password
-
   // List of users who have sent request.
   address[] private _tokenRequestArr;
 
-  struct TokenValue{
+  struct TokenValue {
     // Internal delete flag
     bool _active;
     // Index in _tokenRequestArr
@@ -29,11 +25,11 @@ contract Snail is ERC20 {
    * @dev Initialize total supply of tokens and admin's address.
    * @param _totalSupply total number of tokens.
    */
-  constructor(uint256 _totalSupply, address _admin_addr)
-    ERC20(_totalSupply, _admin_addr)
+  constructor(uint256 _totalSupply, address _adminAddr)
+    ERC20(_totalSupply, _adminAddr)
     public
    {
-     _adminAddr = _admin_addr;
+    //  _adminAddr = _admin_addr;
    }
 
   /// Fallback function
@@ -43,7 +39,7 @@ contract Snail is ERC20 {
    * @dev Check if token exists for a given user
    * @param _user user account address
    */
-  modifier checkTokenRequest(address _user){
+  modifier checkTokenRequest(address _user) {
     require(_tokenRequestMap[_user]._active,"Token does not exist");
     _;
   }
@@ -100,41 +96,11 @@ contract Snail is ERC20 {
   }
 
   /**
-   * @return admin's account address
-   */
-  function getAdminAddress() public view returns(address){
-    return _adminAddr;
-  }
-
-  /**
-   * @dev Check if given credential is a valid admin credential
-   * @param _username unverified admin's username
-   * @param _password unverifid admin's password
-   */
-  function verifyAdmin(string memory _username, string memory _password) public view {
-    require(
-      (keccak256(bytes(_adminName)) == keccak256(bytes(_username))) &&
-      (keccak256(bytes(_adminPasswd)) == keccak256(bytes(_password))),
-      "Invalid credentials"
-    );
-  }
-  /**
-   * @dev Change username and password of admin
-   * @param _username admin's username
-   * @param _password admin's password
-   */
-  function updateAdminCreds(string memory _username, string memory _password) public {
-    require((bytes(_username).length >= 3) && (bytes(_password).length >= 3),"Invalid credentials");
-    _adminName = _username;
-    _adminPasswd = _password;
-  }
-
-  /**
    * @dev Acknowledge a token request.
    * @param _index index in _tokenRequestArr
    */
-  function ackRequestAt(uint256 _index) public checkTokenRequest(_tokenRequestArr[_index]){
-    _transfer(_adminAddr,_tokenRequestArr[_index],_tokenRequestMap[_tokenRequestArr[_index]].value);
+  function ackRequestAt(uint256 _index, address _adminAddr) public checkTokenRequest(_tokenRequestArr[_index]){
+    _transfer(_adminAddr, _tokenRequestArr[_index], _tokenRequestMap[_tokenRequestArr[_index]].value);
     _delTokenRequest(_tokenRequestArr[_index]);
   }
 

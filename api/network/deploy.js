@@ -1,23 +1,51 @@
+/**
+ * Deploy contracts to blockchain
+ * @module network/deploy
+ * @requires local:web3-helper
+ * @requires web3
+ * @requires fs
+ * @requires path
+ */
 const Web3 = require('web3');
 const fs = require('fs');
 const path = require('path');
 
 const web3Helper = require('web3-helper');
 
-const connect = require(path.join(__dirname, 'connect.js'));
-// const loader = require(path.join(__dirname, 'loader.js'));
-const compiler = require(path.join(__dirname, '..', 'contracts', 'compiler.js'));
+const contracts = require(path.join(__dirname, '..', 'contracts', 'instance.js'));
 
-const appConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'app.js'));
-const userConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'user.js'));
-const tknConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'token.js'));
+const compiler = require(path.join(
+  __dirname, '..', 'contracts', 'compiler.js'
+));
 
+// Configuration files
+const appConfig = require(path.join(
+  __dirname, '..', 'config', 'contracts', 'deploy', 'app.js'
+));
+const userConfig = require(path.join(
+  __dirname, '..', 'config', 'contracts', 'deploy', 'user.js'
+));
+const adminCred = JSON.parse(fs.readFileSync(path.join(
+  __dirname, '..', 'config', 'contracts', 'deploy', 'admin-cred.json'
+), 'utf8'));
+const tknConfig = require(path.join(
+  __dirname, '..', 'config', 'contracts', 'deploy', 'token.js'
+));
 
-const appInfoFilePath = path.join(__dirname, '..', 'config', 'contracts', 'load', 'app.json');
-const userInfoFilePath = path.join(__dirname, '..', 'config', 'contracts', 'load', 'user.json');
-const tokenInfoFilePath = path.join(__dirname, '..', 'config', 'contracts', 'load', 'token.json');
+// Info files to store deployment details
+const appInfoFilePath = path.join(
+  __dirname, '..', 'config', 'contracts', 'load', 'app.json'
+);
+const userInfoFilePath = path.join(
+  __dirname, '..', 'config', 'contracts', 'load', 'user.json'
+);
+const tokenInfoFilePath = path.join(
+  __dirname, '..', 'config', 'contracts', 'load', 'token.json'
+);
 
-let adminAddress;
+// Admin's address
+const adminAddress = web3Helper.getRandomAddress();
+
 /**
  * Contract deployment template
  * @param {Object} web3 web3 instance of the blockchain
@@ -86,6 +114,7 @@ function deployRt(
       }
 
       const infoFileContent = {
+        msg: 'This file is generated automatically',
         c_address: contAddr,
         c_abi: abi,
       };
@@ -98,7 +127,7 @@ function deployRt(
             return console.log(err);
           }
         });
-      connect.add(contName, web3, contInst);
+      contracts.add(contName, web3, contInst);
       _resolve(contAddr);
     }).catch( err => {
       _reject(err);
@@ -112,21 +141,22 @@ function deployRt(
  */
 function deployApp() {
   return new Promise(async (resolve, reject) => {
-    const web3App = new Web3(new Web3.providers.HttpProvider(appConfig.provider));
+    const web3App = new Web3(
+      new Web3.providers.HttpProvider(appConfig.provider)
+    );
     if (web3App.isConnected()) {
       web3App.eth.defaultAccount = appConfig.acc_address;
 
       const contCompiled = compiler.compileApp();
       const userCompiled = compiler.compileUser();
-      if (contCompiled) {
+      if (contCompiled && userCompiled) {
         try {
-          adminAddress = web3Helper.getRandomAddress();
           console.log(`Admin account address ${adminAddress}`);
           // Deploy user contract
           const userContAddr = await deployRt(
             web3App,
             userConfig.name,
-            [userConfig.adminName, userConfig.adminPasswd, web3Helper.getRandomAddress()],
+            [adminCred.name, adminCred.passwd, adminAddress],
             userCompiled.User.User.evm.bytecode.object,
             userCompiled.User.User.evm.gasEstimates.creation.totalCost,
             userCompiled.User.User.abi,
@@ -138,7 +168,7 @@ function deployApp() {
           await deployRt(
             web3App,
             appConfig.name,
-            [userContAddr], // [userConfig.adminName, userConfig.adminPasswd, web3Helper.getRandomAddress()],
+            [userContAddr],
             contCompiled.Anarik.Anarik.evm.bytecode.object,
             contCompiled.Anarik.Anarik.evm.gasEstimates.creation.totalCost,
             contCompiled.Anarik.Anarik.abi,
@@ -168,7 +198,9 @@ function deployApp() {
  */
 function deployToken(totalTokens) {
   return new Promise(async (resolve, reject) => {
-    const web3Tkn = new Web3(new Web3.providers.HttpProvider(tknConfig.provider));
+    const web3Tkn = new Web3(
+      new Web3.providers.HttpProvider(tknConfig.provider)
+    );
     if (web3Tkn.isConnected()) {
       web3Tkn.eth.defaultAccount = tknConfig.acc_address;
       const contCompiled = compiler.compileToken();

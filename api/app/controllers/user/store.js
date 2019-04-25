@@ -1,16 +1,19 @@
 /**
  * User's item store
- * @module controllers/user/store
+ * @module app/controllers/user/store
  * @requires local:web3-helper
+ * @requires path
  */
 const path = require('path');
 
 const web3Helper = require('web3-helper');
 
-const connect = require(path.join(__dirname, '..', '..', '..', 'network', 'connect.js'));
-const appConfig = require(path.join(__dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'app.js'));
-// const userConfig = require(path.join(__dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'user.js'));
-// const tknConfig = require(path.join(__dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'token.js'));
+const contracts = require(path.join(
+  __dirname, '..', '..', '..', 'contracts', 'instance.js'
+));
+const appConfig = require(path.join(
+  __dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'app.js'
+));
 
 module.exports = {
   /**
@@ -25,7 +28,7 @@ module.exports = {
 
     if (req.session.user_account != null) {
       // Get total item count in user store
-      connect.get(appConfig.name).inst.getItemCount(
+      contracts.get(appConfig.name).inst.getItemCount(
         (err1, result1) => {
           if (!err1) {
             const itemCount = parseInt(result1.toString());
@@ -49,7 +52,7 @@ module.exports = {
 
             let itemListFlag = true;
             for (let index = 0; index < itemCount && itemListFlag; index++) {
-              connect.get(appConfig.name).inst.getUserStoreItem(
+              contracts.get(appConfig.name).inst.getUserStoreItem(
                 req.session.username,
                 index,
                 {from: appConfig.acc_address},
@@ -92,7 +95,7 @@ module.exports = {
     jsonRes.msg = 'NA';
 
     if (req.session.user_account != null) {
-      let gasEstimate = connect.get(appConfig.name).inst.createItem.estimateGas(
+      let gasEstimate = contracts.get(appConfig.name).inst.createItem.estimateGas(
         req.body.productName,
         req.body.productDesc,
         req.body.productPrice,
@@ -102,14 +105,14 @@ module.exports = {
       gasEstimate = appConfig.DEFAULT_GAS*3;
 
       web3Helper.sendRawTransaction(
-        connect.get(appConfig.name).web3,
+        contracts.get(appConfig.name).web3,
         appConfig.acc_pri_k,
         appConfig.acc_address,
         null,
         gasEstimate,
         appConfig.acc_address,
-        connect.get(appConfig.name).inst.address,
-        connect.get(appConfig.name).inst.createItem.getData(
+        contracts.get(appConfig.name).inst.address,
+        contracts.get(appConfig.name).inst.createItem.getData(
           req.body.productName,
           req.body.productDesc,
           req.body.productPrice,
@@ -154,12 +157,14 @@ module.exports = {
         if (req.body.productSale == null) req.body.productSale = false;
         if (req.body.productName == null) req.body.productName = '';
         if (req.body.productDesc == null) req.body.productDesc = '';
-        if (req.body.productPrice == null || isNaN(req.body.productPrice)) req.body.productPrice = -1;
+        if (req.body.productPrice == null || isNaN(req.body.productPrice)) {
+          req.body.productPrice = -1;
+        }
 
         // Estimate gas limit
         let gasEstimate;
         try {
-          gasEstimate = connect.get(appConfig.name).inst.updateItem.estimateGas(
+          gasEstimate = contracts.get(appConfig.name).inst.updateItem.estimateGas(
             req.body.productName,
             req.body.productDesc,
             req.body.productPrice,
@@ -174,14 +179,14 @@ module.exports = {
         }
 
         web3Helper.sendRawTransaction(
-          connect.get(appConfig.name).web3,
+          contracts.get(appConfig.name).web3,
           appConfig.acc_pri_k,
           appConfig.acc_address,
           null,
           gasEstimate,
           appConfig.acc_address,
-          connect.get(appConfig.name).inst.address,
-          connect.get(appConfig.name).inst.updateItem.getData(
+          contracts.get(appConfig.name).inst.address,
+          contracts.get(appConfig.name).inst.updateItem.getData(
             req.body.productName,
             req.body.productDesc,
             req.body.productPrice,
@@ -223,19 +228,19 @@ module.exports = {
     jsonRes.msg = 'NA';
 
     if (req.session.username != null) {
-      let gasEstimate = connect.get(appConfig.name).inst.deleteItem.estimateGas(
+      let gasEstimate = contracts.get(appConfig.name).inst.deleteItem.estimateGas(
         req.body.productIndex);
       gasEstimate = Math.round(gasEstimate + gasEstimate*0.4);
 
       web3Helper.sendRawTransaction(
-        connect.get(appConfig.name).web3,
+        contracts.get(appConfig.name).web3,
         appConfig.acc_pri_k,
         appConfig.acc_address,
         null,
         gasEstimate,
         appConfig.acc_address,
-        connect.get(appConfig.name).inst.address,
-        connect.get(appConfig.name).inst.deleteItem.getData(
+        contracts.get(appConfig.name).inst.address,
+        contracts.get(appConfig.name).inst.deleteItem.getData(
           req.body.productIndex
         )
       )

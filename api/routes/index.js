@@ -1,54 +1,58 @@
+/**
+ * Index/home routes
+ * @module routes/index
+ * @requires express
+ * @requires path
+ */
 const express = require('express');
-const router = express.Router();
 const path = require('path');
 
-const connect = require(path.join(__dirname, '..', 'network', 'connect.js'));
+const homeCntlr = require(path.join(__dirname, '..', 'app', 'controllers', 'home.js'));
+const authCntlr = require(path.join(__dirname, '..', 'app', 'controllers', 'authentication.js'));
 
-// const appConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'app.js'));
-const userConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'user.js'));
-// const tknConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'token.js'));
+const router = express.Router();
 
-const loginCntlr = require(path.join(__dirname, '..', 'app', 'controllers', 'user', 'login.js'));
+/**
+ * @api {get} / home
+ * @apiVersion 1.0.0
+ * @apiName Home
+ * @apiGroup Home
+ *
+ * @apiSuccess {string} msg Anarik API v1
+ *
+ * @apiUse UnauthorizedError
+ */
+router.get('/', homeCntlr.home);
 
+/**
+ * @api {post} /login Login an user
+ * @apiVersion 1.0.0
+ * @apiName Login
+ * @apiGroup Authentication
+ *
+ * @apiParam {string} l_username username
+ * @apiParam {string} l_password password
+ * 
+ * @apiSuccess {boolean} success true
+ * @apiSuccess {string} username
+ * @apiSuccess {number} Number of snails owned by user
+ *
+ * @apiUse UnauthorizedError
+ */
+router.post('/login', authCntlr.login);
 
-/** Api home */
-router.get('/', (req, res) => {
-  res.json({msg: 'Anarik API v1'});
-});
-
-/** Authenticate a user */
-router.post('/login', (req, res, next) => {
-  const jsonRes = {};
-  jsonRes.success = false;
-  jsonRes.msg = 'NA';
-
-  connect.get(userConfig.name).inst.isUserAdmin(
-    connect.get(userConfig.name).web3.fromAscii(req.body.l_username),
-    (err, result) => {
-      if ( result || !err ) {
-        loginCntlr.adminLogin(req, res, next);
-      } else {
-        loginCntlr.userLogin(req, res, next);
-      }
-    }
-  );
-});
-
-/** Logout the user */
-router.post('/logout', (req, res, next) => {
-  const jsonRes = {};
-  jsonRes.success = false;
-  jsonRes.msg = 'Logout successfully';
-
-  req.session.destroy(function(err) {
-    if (err) {
-      req.session = null;
-      jsonRes.msg = 'Something failed';
-    } else {
-      jsonRes.success = true;
-    }
-    res.json(jsonRes);
-  });
-});
+/**
+ * @api {post} /logout Logout an user
+ * @apiVersion 1.0.0
+ * @apiName Logout
+ * @apiGroup Authentication
+ *
+ * @apiSuccess {boolean} success true
+ * @apiSuccess {string} msg Logout successfully
+ *
+ * @apiError {boolean} success false
+ * @apiError {string} msg Something failed
+ */
+router.post('/logout', authCntlr.logout);
 
 module.exports = router;

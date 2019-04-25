@@ -32,7 +32,7 @@ contract User is UserIntf {
   // Array of username
   bytes32[] public userArr;
 
-  // Initialize a admin user
+  // Initialize an admin user
   constructor (
     bytes32 _adminName,
     string memory _adminPasswd,
@@ -51,18 +51,31 @@ contract User is UserIntf {
   }
 
   /**
-   * @dev Check if user credentials are valid
+   * @dev Check credentials
    * @param _username username value of user credential
    * @param _password password value of user credential
-   * @return A boolean indicating credential's validity
    */
-  function verifyCredential(bytes32 _username, string memory _password) public view returns(bool) {
+  modifier verifyCred(bytes32 _username, string memory _password) {
     require(
       (userMap[_username]._active == true) &&
       (keccak256(abi.encodePacked(userMap[_username].user)) == keccak256(abi.encodePacked(_username))) &&
       (keccak256(bytes(userMap[_username].passwd)) == keccak256(bytes(_password))),
       "Invalid credentials"
     );
+    _;
+  }
+
+  /**
+   * @dev Check if user credentials are valid
+   * @param _username username value of user credential
+   * @param _password password value of user credential
+   * @return A boolean indicating credential's validity
+   */
+  function verifyCredential(bytes32 _username, string memory _password)
+   public
+   view
+   verifyCred(_username, _password) returns(bool)
+  {
     return true;
   }
 
@@ -141,8 +154,7 @@ contract User is UserIntf {
      bytes32 _username,
      string memory _oldPasswd,
      string memory _newPasswd
-   ) public {
-     require(verifyCredential(_username, _oldPasswd));
+   ) public verifyCred(_username, _oldPasswd) {
 
      UserData storage userData = userMap[_username];
      userData.passwd = _newPasswd;
@@ -159,8 +171,10 @@ contract User is UserIntf {
   function removeUser (
     bytes32 _username,
     string memory _password
-  ) public {
-    require(verifyCredential(_username, _password));
+  )
+   public
+   verifyCred(_username, _password)
+  {
 
     uint256 index = userMap[_username].index;
 
@@ -179,7 +193,11 @@ contract User is UserIntf {
    * @param _username User's username as used in credential.
    * @return account(token's wallet) address
    */
-  function getUserAccAddr(bytes32 _username) public view returns(address) {
+  function getUserAccAddr(bytes32 _username)
+   public
+   view
+   returns(address)
+  {
     require(
       userMap[_username]._active &&
       ! userMap[_username].isAdmin,
@@ -193,7 +211,11 @@ contract User is UserIntf {
    * @param _username User's username as used in credential
    * @return account(token's wallet) address
    */
-  function getAdminAccAddr(bytes32 _username, string memory _password) public view returns(address) {
+  function getAdminAccAddr(bytes32 _username, string memory _password)
+   public
+   view
+   returns(address)
+  {
     require(verifyAdminCredential(_username, _password));
     return (userMap[_username].account);
   }

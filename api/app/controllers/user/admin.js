@@ -1,16 +1,23 @@
 
 /**
  * Manage user account(s)
- * @module controllers/user/admin
+ * @module app/controllers/user/admin
  * @requires local:web3-helper
+ * @requires path
  */
 const path = require('path');
 
 const web3Helper = require('web3-helper');
 
-const connect = require(path.join(__dirname, '..', '..', '..', 'network', 'connect.js'));
-const tknConfig = require(path.join(__dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'token.js'));
-const userConfig = require(path.join(__dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'user.js'));
+const contracts = require(path.join(
+  __dirname, '..', '..', '..', 'contracts', 'instance.js'
+));
+const tknConfig = require(path.join(
+  __dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'token.js'
+));
+const userConfig = require(path.join(
+  __dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'user.js'
+));
 
 module.exports = {
 
@@ -24,45 +31,50 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
     if (
-      req.body.token_recvr != null &&
-          req.body.token_count != null &&
-          req.body.token_count > 0
+      req.body.tokenRecvr != null &&
+          req.body.tokenCount != null &&
+          req.body.tokenCount > 0
     ) {
-      connect.get(userConfig.name).inst.verifyAdminCredential(
+      // Verify for admin's credentials
+      contracts.get(userConfig.name).inst.verifyAdminCredential(
         req.session.username,
         req.session.password,
         (err, result) => {
           if (!err || result) {
-            connect.get(userConfig.name).inst.getUserAccAddr(
-              req.body.token_recvr,
+            contracts.get(userConfig.name).inst.getUserAccAddr(
+              req.body.tokenRecvr,
               {from: userConfig.acc_address},
               (err1, result1) => {
                 if (!err1) {
                   let gasLimit;
                   try {
-                    gasLimit = connect.get(tknConfig.name).inst.donateTokens.estimateGas(
-                      req.session.user_account,
-                      result1,
-                      req.body.token_count,
-                      {from: tknConfig.acc_address}
-                    );
+                    gasLimit = contracts
+                      .get(tknConfig.name)
+                      .inst
+                      .donateTokens
+                      .estimateGas(
+                        req.session.user_account,
+                        result1,
+                        req.body.tokenCount,
+                        {from: tknConfig.acc_address}
+                      );
                     gasLimit = Math.round(gasLimit + gasLimit*0.6);
                   } catch (e) {
-                    gasLimit = connect.get(tknConfig.name).gas;
+                    gasLimit = contracts.get(tknConfig.name).gas;
                   }
 
                   web3Helper.sendRawTransaction(
-                    connect.get(tknConfig.name).web3,
+                    contracts.get(tknConfig.name).web3,
                     tknConfig.acc_pri_k,
                     tknConfig.acc_address,
                     null,
                     gasLimit,
                     tknConfig.acc_address,
-                    connect.get(tknConfig.name).inst.address,
-                    connect.get(tknConfig.name).inst.donateTokens.getData(
+                    contracts.get(tknConfig.name).inst.address,
+                    contracts.get(tknConfig.name).inst.donateTokens.getData(
                       req.session.user_account,
                       result1,
-                      req.body.token_count
+                      req.body.tokenCount
                     )
                   )
                     .then(receipt => {
@@ -100,29 +112,40 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.body.token_requestor_index != null) {
-      connect.get(userConfig.name).inst.verifyAdminCredential(
+    if (req.body.tokenRequestIndex != null) {
+      // Verify admin's credential
+      contracts.get(userConfig.name).inst.verifyAdminCredential(
         req.session.username,
         req.session.password,
         (err, result) => {
           if (!err || result) {
             // Acknowledge token request
-            let gasLimit = parseInt(connect.get(tknConfig.name).inst.ackRequestAt.estimateGas(
-              req.body.token_requestor_index,
-              {from: tknConfig.acc_address}
-            ));
+            let gasLimit = parseInt(
+              contracts
+                .get(tknConfig.name)
+                .inst
+                .ackRequestAt
+                .estimateGas(
+                  req.body.tokenRequestIndex,
+                  req.session.user_account,
+                  {from: tknConfig.acc_address}
+                ));
 
             gasLimit = Math.round(gasLimit + gasLimit*0.3);
 
             web3Helper.sendRawTransaction(
-              connect.get(tknConfig.name).web3,
+              contracts.get(tknConfig.name).web3,
               tknConfig.acc_pri_k,
               tknConfig.acc_address,
               null,
               gasLimit,
               tknConfig.acc_address,
-              connect.get(tknConfig.name).inst.address,
-              connect.get(tknConfig.name).inst.ackRequestAt.getData(req.body.token_requestor_index)
+              contracts.get(tknConfig.name).inst.address,
+              contracts
+                .get(tknConfig.name)
+                .inst
+                .ackRequestAt
+                .getData(req.body.tokenRequestIndex, req.session.user_account)
             )
               .then(receipt => {
                 jsonRes.success = true;
@@ -136,7 +159,7 @@ module.exports = {
           }
         });
     } else {
-      jsonRes.msg = 'Unauthorised';
+      jsonRes.msg = 'Invalid token request';
       res.status(401).json(jsonRes);
     }
   },
@@ -151,28 +174,34 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.body.token_requestor_index != null) {
-      connect.get(userConfig.name).inst.verifyAdminCredential(
+    if (req.body.tokenRequestIndex != null) {
+      // Verify admin's credential
+      contracts.get(userConfig.name).inst.verifyAdminCredential(
         req.session.username,
         req.session.password,
         (err, result) => {
           if (!err || result) {
-            let gasLimit = parseInt(connect.get(tknConfig.name).inst.rejectRequestAt.estimateGas(
-              req.body.token_requestor_index,
-              {from: tknConfig.acc_address}
-            ));
+            let gasLimit = parseInt(
+              contracts.get(tknConfig.name).inst.rejectRequestAt.estimateGas(
+                req.body.tokenRequestIndex,
+                {from: tknConfig.acc_address}
+              ));
 
             gasLimit = Math.round(gasLimit + gasLimit*0.3);
 
             web3Helper.sendRawTransaction(
-              connect.get(tknConfig.name).web3,
+              contracts.get(tknConfig.name).web3,
               tknConfig.acc_pri_k,
               tknConfig.acc_address,
               null,
               gasLimit,
               tknConfig.acc_address,
-              connect.get(tknConfig.name).inst.address,
-              connect.get(tknConfig.name).inst.rejectRequestAt.getData(req.body.token_requestor_index)
+              contracts.get(tknConfig.name).inst.address,
+              contracts
+                .get(tknConfig.name)
+                .inst
+                .rejectRequestAt
+                .getData(req.body.tokenRequestIndex)
             )
               .then(receipt => {
                 jsonRes.success = true;

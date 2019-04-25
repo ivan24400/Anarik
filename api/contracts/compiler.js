@@ -1,6 +1,9 @@
 /**
  * Compile all required contract source files
  * @module network/compiler
+ * @requires solc
+ * @requires fs
+ * @requires path
  */
 const solc = require('solc');
 const fs = require('fs');

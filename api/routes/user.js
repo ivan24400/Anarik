@@ -1,9 +1,10 @@
 const express = require('express');
-const router = express.Router();
 const path = require('path');
 
 const userActionsController = require(path.join(__dirname, '..', 'app', 'controllers', 'user', 'actions.js'));
 const userAccountController = require(path.join(__dirname, '..', 'app', 'controllers', 'user', 'account.js'));
+
+const router = express.Router();
 
 /**
  * @api {post} /user Add a new user
@@ -24,10 +25,10 @@ router.post('/', userAccountController.addUser);
  * @apiParam {string} username registered username
  * @apiParam {string} oldPassword current user's password
  * @apiParam {string} newPassword new password
- * 
+ *
  * @apiSuccess {boolean} success operation status
  * @apiSuccess {string} msg User updated successfully
- * 
+ *
  * @apiUse UnauthorizedError
  */
 router.put('/', userAccountController.updateUser);
@@ -40,10 +41,10 @@ router.put('/', userAccountController.updateUser);
  *
  * @apiParam {string} username registered username
  * @apiParam {string} password registered user's password
- * 
+ *
  * @apiSuccess {boolean} success operation status
  * @apiSuccess {string} msg User deleted successfully
- * 
+ *
  * @apiUse UnauthorizedError
  */
 router.delete('/', userAccountController.deleteUser);
@@ -55,10 +56,10 @@ router.delete('/', userAccountController.deleteUser);
  * @apiGroup User
  *
  * @apiParam {number} tokenCount Number of tokens
- * 
+ *
  * @apiSuccess {boolean} success operation status
  * @apiSuccess {string} msg Token requested successfully
- * 
+ *
  * @apiUse UnauthorizedError
  */
 router.post('/req-tokens', userActionsController.requestTokens);
@@ -69,10 +70,9 @@ router.post('/req-tokens', userActionsController.requestTokens);
  * @apiName PurchaseHistory
  * @apiGroup User
  *
- * 
  * @apiSuccess {boolean} success operation status
  * @apiSuccess {string} msg User deleted successfully
- * 
+ *
  * @apiUse UnauthorizedError
  */
 router.get('/purchase-history', userActionsController.purchaseHistory);
