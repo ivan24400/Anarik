@@ -37,7 +37,7 @@ function numToHexStrict(num) {
  */
 function getTransactionReceiptMined(web3Instance, txHash, interval) {
   const self = this;
-  const transactionReceiptAsync = function(resolve, reject) {
+  const transactionReceiptAsync = (resolve, reject) => {
     web3Instance.eth.getTransactionReceipt(txHash, (error, receipt) => {
       if (error) {
         reject(error);
@@ -54,7 +54,11 @@ function getTransactionReceiptMined(web3Instance, txHash, interval) {
   if (Array.isArray(txHash)) {
     return Promise.all(
       txHash.map(
-        oneTxHash => self.getTransactionReceiptMined(web3Instance, oneTxHash, interval)
+        oneTxHash => self.getTransactionReceiptMined(
+          web3Instance,
+          oneTxHash,
+          interval
+        )
       )
     );
   } else if (typeof txHash === 'string') {
@@ -86,7 +90,7 @@ function sendRawTransaction(
   to,
   data
 ) {
-  const sendRawTxn = async function(resolve, reject) {
+  const sendRawTxn = async (resolve, reject) => {
     try {
       if (
         web3Inst == null ||
@@ -98,7 +102,9 @@ function sendRawTransaction(
         reject('Invalid arguments');
       }
 
-      const transactionCount = await web3Inst.eth.getTransactionCount(accAddr, 'pending');
+      const transactionCount = await web3Inst
+        .eth
+        .getTransactionCount(accAddr, 'pending');
 
       const nonce = web3Utils.toHex(transactionCount);
 
@@ -111,11 +117,9 @@ function sendRawTransaction(
 
       // Default gas limit is assumed to be 50% higher than estimation.
       if (gasLimit == null || isNaN(gasLimit)) {
-        gasLimit = parseInt(web3Inst.eth.estimateGas({'from': from, 'data': data}));
-        gasLimit = web3Utils.toHex(gasLimit + gasLimit*0.5);
+        gasLimit = web3Inst.eth.estimateGas({'from': from, 'data': data});
+        gasLimit = web3Utils.toHex(Math.round(gasLimit + gasLimit*0.5));
       }
-
-      gasLimit = numToHexStrict(gasLimit);
 
       // Check for strict hex
       if (from.slice(0, 2) !== '0x') from = '0x' + from;
@@ -135,28 +139,32 @@ function sendRawTransaction(
       tx.sign(Buffer.from(privateKey, 'hex'));
       const txSerialized = tx.serialize();
 
-      web3Inst.eth.sendRawTransaction('0x' + txSerialized.toString('hex'), function(err, result) {
-        if (!err) {
-          getTransactionReceiptMined(web3Inst, result)
-            .then(function(receipts) {
-              resolve(receipts);
-            })
-            .catch(function(error) {
-              reject(error);
-            });
-        } else {
-          reject(err);
-        }
-      });
+      web3Inst
+        .eth
+        .sendRawTransaction(
+          '0x' + txSerialized.toString('hex'),
+          (err, result) => {
+            if (!err) {
+              getTransactionReceiptMined(web3Inst, result)
+                .then(receipts => {
+                  resolve(receipts);
+                })
+                .catch(error => {
+                  reject(error);
+                });
+            } else {
+              reject(err);
+            }
+          });
     } catch (e) {
       reject(e);
     }
-  }
+  };
   return new Promise(sendRawTxn);
 }
 
 module.exports = {
-  sendRawTransaction: sendRawTransaction,
-  getTransactionReceiptMined: getTransactionReceiptMined,
+  sendRawTransaction,
+  getTransactionReceiptMined,
   getRandomAddress: _utils.getRandomAddress,
 };

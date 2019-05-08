@@ -1,8 +1,11 @@
 const express = require('express');
 const path = require('path');
 
-const storeCntlr = require(path.join(__dirname, '..', 'app', 'controllers', 'user', 'store.js'));
+const storeCntlr = require(path.join(
+  __dirname, '..', 'app', 'controllers', 'user', 'store.js'
+));
 
+// eslint-disable-next-line new-cap
 const router = express.Router();
 
 /**
@@ -75,5 +78,11 @@ router.put('/item', storeCntlr.updateItem);
  * @apiUse UnauthorizedError
  */
 router.delete('/item', storeCntlr.deleteItem);
+
+
+router.route('/item2')
+  .post(storeCntlr.addItem2)
+  .get(storeCntlr.getItem2Count)
+  .put(storeCntlr.getItem2);
 
 module.exports = router;

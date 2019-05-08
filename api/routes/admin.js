@@ -7,8 +7,11 @@
 const express = require('express');
 const path = require('path');
 
-const adminController = require(path.join(__dirname, '..', 'app', 'controllers', 'user', 'admin.js'));
+const adminController = require(path.join(
+  __dirname, '..', 'app', 'controllers', 'user', 'admin.js'
+));
 
+// eslint-disable-next-line new-cap
 const router = express.Router();
 
 /**
@@ -19,7 +22,7 @@ const router = express.Router();
  *
  * @apiParam {string} tokenRecvr username of token receiver
  * @apiParam {number} tokenCount number of tokens to send
- * 
+ *
  * @apiSuccess {boolean} success true
  * @apiSuccess {string} msg Token request acknowledged successfully
  *
@@ -35,7 +38,7 @@ router.post('/tokens', adminController.sendTokens);
  * @apiGroup Admin
  *
  * @apiParam {number} tokenRequestIndex index of token in token request's list
- * 
+ *
  * @apiSuccess {boolean} success true
  * @apiSuccess {string} msg Token request acknowledged successfully
  *
@@ -51,7 +54,7 @@ router.post('/req', adminController.acknowledgeRequest);
  * @apiGroup Admin
  *
  * @apiParam {number} tokenRequestIndex index of token in token request's list
- * 
+ *
  * @apiSuccess {boolean} success true
  * @apiSuccess {string} msg Token request rejected successfully
  *

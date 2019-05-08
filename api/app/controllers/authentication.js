@@ -6,11 +6,17 @@
 
 const path = require('path');
 
-const contracts = require(path.join(__dirname, '..', '..', 'contracts', 'instance.js'));
+const contracts = require(path.join(
+  __dirname, '..', '..', 'contracts', 'instance.js'
+));
 
-const userConfig = require(path.join(__dirname, '..', '..', 'config', 'contracts', 'deploy', 'user.js'));
+const userConfig = require(path.join(
+  __dirname, '..', '..', 'config', 'contracts', 'deploy', 'user.js'
+));
 
-const loginCntlr = require(path.join(__dirname, 'user', 'login.js'));
+const loginCntlr = require(path.join(
+  __dirname, 'user', 'login.js'
+));
 
 module.exports = {
   /**
@@ -23,11 +29,11 @@ module.exports = {
     const jsonRes = {};
     jsonRes.success = false;
     jsonRes.msg = 'NA';
-  
+
     contracts.get(userConfig.name).inst.isUserAdmin(
       contracts.get(userConfig.name).web3.fromAscii(req.body.l_username),
       (err, result) => {
-        if ( result || !err ) {
+        if (result) {
           loginCntlr.adminLogin(req, res, next);
         } else {
           loginCntlr.userLogin(req, res, next);
@@ -36,7 +42,7 @@ module.exports = {
     );
   },
 
-   /**
+  /**
    * Remove user's session
    * @param {Object} req - http request object
    * @param {Object} res - http response object
@@ -46,8 +52,8 @@ module.exports = {
     const jsonRes = {};
     jsonRes.success = false;
     jsonRes.msg = 'NA';
-  
-    req.session.destroy(function(err) {
+
+    req.session.destroy(err => {
       if (err) {
         req.session = null;
         jsonRes.msg = 'Something failed';
@@ -58,5 +64,4 @@ module.exports = {
       res.json(jsonRes);
     });
   },
-
-}
+};

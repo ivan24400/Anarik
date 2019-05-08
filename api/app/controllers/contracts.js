@@ -13,9 +13,15 @@ const tknConfig = require(path.join(
   __dirname, '..', '..', 'config', 'contracts', 'deploy', 'token.js'
 ));
 
-const contracts = require(path.join(__dirname, '..', '..', 'contracts', 'instance.js'));
-const loader = require(path.join(__dirname, '..', '..', 'network', 'loader.js'));
-const deploy = require(path.join(__dirname, '..', '..', 'network', 'deploy.js'));
+const contracts = require(path.join(
+  __dirname, '..', '..', 'contracts', 'instance.js'
+));
+const loader = require(path.join(
+  __dirname, '..', '..', 'network', 'loader.js'
+));
+const deploy = require(path.join(
+  __dirname, '..', '..', 'network', 'deploy.js'
+));
 
 module.exports = {
 
@@ -28,7 +34,7 @@ module.exports = {
     const jsonRes = {};
     jsonRes.success = false;
     jsonRes.msg = 'NA';
-  
+
     deploy.deploy()
       .then(() => {
         jsonRes.success = true;
@@ -36,7 +42,7 @@ module.exports = {
       })
       .catch(e => {
         res.status(500);
-        jsonRes.msg = 'Something failed';
+        jsonRes.msg = e.message;
       })
       .finally(() => {
         res.json(jsonRes);
@@ -52,7 +58,7 @@ module.exports = {
     const jsonRes = {};
     jsonRes.success = false;
     jsonRes.msg = 'NA';
-  
+
     loader.load()
       .then(() => {
         jsonRes.success = true;
@@ -72,10 +78,10 @@ module.exports = {
    * @param {Object} req - http request object
    * @param {Object} res - http response object
    */
-  getBalances:(req, res) => {
+  getBalances: (req, res) => {
     const jsonRes = {};
     jsonRes.success = false;
- 
+
     jsonRes.balance = {};
     try {
       jsonRes.balance.app = contracts
@@ -93,10 +99,10 @@ module.exports = {
     } catch (e) {
       jsonRes.msg = 'Unable to get balance';
     }
-  
+
     if (Object.values(jsonRes.balance).length > 0) {
       jsonRes.success = true;
     }
     res.json(jsonRes);
-  }, 
-}
+  },
+};

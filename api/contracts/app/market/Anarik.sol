@@ -7,9 +7,6 @@ import "./user/User.sol";
  * @title Stores market data and related functions
  */
 contract Anarik {
-  
-  // using StringUtil for string;
-
   // Simple Item/Good in the market
   struct Item {
     // internal delete flag
@@ -28,7 +25,6 @@ contract Anarik {
 
   // List of all items in the market
   Item[] private _items;
-  uint256 getStoreItemIndex = 0;
 
   User internal contUser;
 
@@ -91,7 +87,7 @@ contract Anarik {
 
     (,,,_acc,,_passwd) = contUser.userMap(_username);
     require(
-      (_acc ==  _items[_index].owner) &&
+      (_acc == _items[_index].owner) &&
       (keccak256(bytes(_passwd)) == keccak256(bytes(_password))),
       "Unauthorised access"
     );
@@ -120,7 +116,7 @@ contract Anarik {
    * @return operation status
    */
   function deleteItem(uint256 _index) public checkIndex(_index) returns(bool) {
-    //Check if _index is valid within _items array
+    // Check if _index is valid within _items array
     _items[_index] = _items[_items.length - 1];
     delete _items[_items.length - 1];
     return true;
@@ -166,8 +162,8 @@ contract Anarik {
   /**
    * @dev Return items owned by the user and which are not for sale.
    * @param _ownername user/owner name.
-   * @param _index index of item in _itens
-   * @return AFS, name, description and price of the item.
+   * @param _index index of item in _items
+   * @return isForSale, name, description and price of the item.
    */
   function getUserStoreItem(bytes32 _ownername, uint256 _index)
    public

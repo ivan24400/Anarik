@@ -8,11 +8,12 @@ const errors = require(path.join(__dirname, '..', 'lib', 'error-msgs.js'));
 
 /**
  * 'contracts' is a dictionary with following structure:
- * {
+ * <pre style='background:silver'><code>{
  *  web3: web3Instance,
  *  inst: contractInstance,
  *  addr: contractAddress,
  * }
+ * </code></pre>
  */
 let contracts = null;
 

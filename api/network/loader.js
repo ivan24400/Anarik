@@ -9,24 +9,37 @@ const fs = require('fs');
 const path = require('path');
 const Web3 = require('web3');
 
-const contracts = require(path.join(__dirname, '..', 'contracts', 'instance.js'));
+const contracts = require(path.join(
+  __dirname, '..', 'contracts', 'instance.js'
+));
 
 // Configuration files
-const appConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'app.js'));
-const userConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'user.js'));
-const tknConfig = require(path.join(__dirname, '..', 'config', 'contracts', 'deploy', 'token.js'));
+const appConfig = require(path.join(
+  __dirname, '..', 'config', 'contracts', 'deploy', 'app.js'
+));
+const userConfig = require(path.join(
+  __dirname, '..', 'config', 'contracts', 'deploy', 'user.js'
+));
+const tknConfig = require(path.join(
+  __dirname, '..', 'config', 'contracts', 'deploy', 'token.js'
+));
 
 // Info files to load contracts from
-const appInfoFilePath = path.join(__dirname, '..', 'config', 'contracts', 'load', 'app.json');
-const userInfoFilePath = path.join(__dirname, '..', 'config', 'contracts', 'load', 'user.json');
-const tknInfoFilePath = path.join(__dirname, '..', 'config', 'contracts', 'load', 'token.json');
+const appInfoFilePath = path.join(
+  __dirname, '..', 'config', 'contracts', 'load', 'app.json'
+);
+const userInfoFilePath = path.join(
+  __dirname, '..', 'config', 'contracts', 'load', 'user.json'
+);
+const tknInfoFilePath = path.join(
+  __dirname, '..', 'config', 'contracts', 'load', 'token.json'
+);
 
 /**
  * Connect to existing deployed User contract
  * @return {Object} Promisified function
  */
 function loadUser() {
-
   return new Promise((resolve, request) => {
     const web3 = new Web3(new Web3.providers.HttpProvider(userConfig.provider));
     if (web3.isConnected()) {
@@ -38,7 +51,7 @@ function loadUser() {
       );
       resolve();
     } else {
-      reject('Not connected to App blockchain');
+      reject(new Error('Not connected to App blockchain'));
     }
   });
 }
@@ -48,7 +61,6 @@ function loadUser() {
  * @return {Object} Promisified function
  */
 function loadApp() {
-
   return new Promise((resolve, request) => {
     const web3 = new Web3(new Web3.providers.HttpProvider(appConfig.provider));
     if (web3.isConnected()) {
@@ -60,7 +72,7 @@ function loadApp() {
       );
       resolve();
     } else {
-      reject('Not connected to App blockchain');
+      reject(new Error('Not connected to App blockchain'));
     }
   });
 }
@@ -70,7 +82,6 @@ function loadApp() {
  * @return {Object} Promisified function
  */
 function loadToken() {
-
   return new Promise((resolve, reject) => {
     const web3 = new Web3(new Web3.providers.HttpProvider(tknConfig.provider));
     if (web3.isConnected()) {
@@ -84,7 +95,7 @@ function loadToken() {
       );
       resolve();
     } else {
-      reject('Not connected to Token blockchain');
+      reject(new Error('Not connected to Token blockchain'));
     }
   });
 }
@@ -96,10 +107,10 @@ function loadToken() {
 function load() {
   return new Promise((resolve, reject) => {
     Promise.all([loadUser(), loadApp(), loadToken()])
-      .then(function() {
+      .then(() => {
         resolve();
       })
-      .catch(function(err) {
+      .catch(err => {
         reject(err);
       });
   });

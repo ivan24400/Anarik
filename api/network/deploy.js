@@ -12,7 +12,9 @@ const path = require('path');
 
 const web3Helper = require('web3-helper');
 
-const contracts = require(path.join(__dirname, '..', 'contracts', 'instance.js'));
+const contracts = require(path.join(
+  __dirname, '..', 'contracts', 'instance.js'
+));
 
 const compiler = require(path.join(
   __dirname, '..', 'contracts', 'compiler.js'
@@ -57,7 +59,7 @@ const adminAddress = web3Helper.getRandomAddress();
  * @param {string} fromAddr user account address which will deploy the contract
  * @param {string} privateKey private key of transaction sender
  * @param {string} infoFilePath file path to store abi and byte code.
- * @return {Object} a promise
+ * @return {Object} a promise object for deploying a contract
  */
 function deployRt(
   web3,
@@ -75,18 +77,19 @@ function deployRt(
 
     if (bytecode.slice(0, 2) !== '0x') bytecode = '0x' + bytecode;
 
-    let gasEstimate;
+    let gasLimit;
     try {
-      gasEstimate = ( (isNaN(gas) || gas == null) ?
+      gasLimit = ((isNaN(gas) || gas == null) ?
         web3.eth.estimateGas({data: bytecode}) :
         gas
       );
     } catch (e) {
-      gasEstimate = compiler.defaultGasLimit;
+      gasLimit = compiler.defaultGasLimit;
     }
-    gasEstimate = Math.round(parseInt(gasEstimate) + parseInt(gasEstimate)*0.1);
+    gasLimit = Math.round(parseInt(gasLimit) + parseInt(gasLimit)*0.5);
+    gasLimit = `0x${gasLimit.toString(16)}`;
 
-    console.log('Gas estimate:'+gasEstimate);
+    console.log('Gas estimate:'+gasLimit);
     console.log('Block gas limit:'+web3.eth.getBlock('latest').gasLimit);
     console.log('Funds:'+web3.eth.getBalance(fromAddr));
 
@@ -97,7 +100,7 @@ function deployRt(
       privateKey,
       fromAddr,
       null,
-      gasEstimate,
+      gasLimit,
       fromAddr,
       null,
       (
@@ -105,33 +108,35 @@ function deployRt(
           _cont.new.getData({data: bytecode}) :
           _cont.new.getData(...contArgs, {data: bytecode})
       )
-    ).then( receipt => {
-      const contAddr = receipt.contractAddress;
-      const contInst = _cont.at(contAddr);
-      console.log('Deployed '+contName+' at:'+contAddr);
-      if (contAddr == null) {
-        return;
-      }
+    )
+      .then(receipt => {
+        const contAddr = receipt.contractAddress;
+        const contInst = _cont.at(contAddr);
+        console.log('Deployed '+contName+' at:'+contAddr);
+        if (contAddr == null) {
+          return;
+        }
 
-      const infoFileContent = {
-        msg: 'This file is generated automatically',
-        c_address: contAddr,
-        c_abi: abi,
-      };
+        const infoFileContent = {
+          msg: 'This file is generated automatically',
+          c_address: contAddr,
+          c_abi: abi,
+        };
 
-      fs.writeFile(
-        infoFilePath,
-        JSON.stringify(infoFileContent),
-        err => {
-          if (err) {
-            return console.log(err);
-          }
-        });
-      contracts.add(contName, web3, contInst);
-      _resolve(contAddr);
-    }).catch( err => {
-      _reject(err);
-    });
+        fs.writeFile(
+          infoFilePath,
+          JSON.stringify(infoFileContent),
+          err => {
+            if (err) {
+              return console.log(err);
+            }
+          });
+        contracts.add(contName, web3, contInst);
+        _resolve(contAddr);
+      })
+      .catch( err => {
+        _reject(err);
+      });
   });
 }
 
@@ -180,13 +185,13 @@ function deployApp() {
           resolve();
         } catch (e) {
           console.log(e);
-          reject('App deployment failed');
+          reject(new Error('App deployment failed'));
         }
       } else {
-        reject('App compilation failed');
+        reject(new Error('App compilation failed'));
       }
     } else {
-      reject('App not connected to blockchain');
+      reject(new Error('App not connected to blockchain'));
     }
   });
 }
@@ -210,7 +215,10 @@ function deployToken(totalTokens) {
           await deployRt(
             web3Tkn,
             tknConfig.name,
-            [(totalTokens == null ? tknConfig.TOTAL_TOKENS : totalTokens), adminAddress],
+            [
+              (totalTokens == null ? tknConfig.TOTAL_TOKENS : totalTokens),
+              adminAddress,
+            ],
             contCompiled.Snail.Snail.evm.bytecode.object,
             contCompiled.Snail.Snail.evm.gasEstimates.creation.totalCost,
             contCompiled.Snail.Snail.abi,
@@ -220,20 +228,20 @@ function deployToken(totalTokens) {
           );
           resolve();
         } catch (e) {
-          reject('Token deployment failed');
+          reject(new Error('Token deployment failed'));
         }
       } else {
-        reject('Token compilation failed');
+        reject(new Error('Token compilation failed'));
       }
     } else {
-      reject('Token not connected to blockchain');
+      reject(new Error('Token not connected to blockchain'));
     }
   });
 }
 
 /**
  * Deploy all contracts  to the blockchain
- * @return {Object} A promise object
+ * @return {Promise} A promise object
  */
 function deploy() {
   return new Promise((resolve, reject) => {
@@ -250,7 +258,7 @@ function deploy() {
 }
 
 module.exports = {
-  deploy: deploy,
-  deployApp: deployApp,
-  deployToken: deployToken,
+  deploy,
+  deployApp,
+  deployToken,
 };

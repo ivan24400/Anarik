@@ -8,7 +8,9 @@ const path = require('path');
 
 const web3Helper = require('web3-helper');
 
-const contracts = require(path.join(__dirname, '..', '..', 'contracts', 'instance.js'));
+const contracts = require(path.join(
+  __dirname, '..', '..', 'contracts', 'instance.js'
+));
 
 const appConfig = require(path.join(
   __dirname, '..', '..', 'config', 'contracts', 'deploy', 'app.js'
@@ -44,7 +46,7 @@ module.exports = {
             // Retrieve all items in market
             for (let index=0; index < itemCount; index++) {
               promItems.push(
-                new Promise(function(resolve) {
+                new Promise(resolve => {
                   contracts.get(appConfig.name).inst.getPublicMarketItem(
                     index,
                     req.session.username,
@@ -112,15 +114,19 @@ module.exports = {
                     const sellerAddr = result1[0];
 
                     // Send tokens
-                    let gasLimit = parseInt(
-                      contracts.get(tknConfig.name).inst.sendTokens.estimateGas(
-                        sellerAddr,
+                    let gasLimit = contracts
+                      .get(tknConfig.name)
+                      .inst
+                      .sendTokens
+                      .estimateGas(
                         buyerAddr,
+                        sellerAddr,
                         itemPrice,
                         {from: tknConfig.acc_address}
-                      ));
+                      );
 
                     gasLimit = Math.round(gasLimit + gasLimit*0.5);
+                    gasLimit = `0x${gasLimit.toString(16)}`;
 
                     web3Helper.sendRawTransaction(
                       contracts.get(tknConfig.name).web3,
@@ -137,6 +143,9 @@ module.exports = {
                       )
                     )
                       .then(receipt => {
+                        if (receipt.status != 0x1) {
+                          throw new Error('Transaction failed');
+                        }
                         const buyerLog = 'P'+USER_LOG_DELIMITER +
                         sellerName +
                         USER_LOG_DELIMITER +
@@ -155,7 +164,7 @@ module.exports = {
                         USER_LOG_DELIMITER +
                         result1[4].toString();
 
-                        const gasEstimate = contracts
+                        const gasLimitCo = contracts
                           .get(appConfig.name)
                           .inst
                           .changeOwner
@@ -172,7 +181,7 @@ module.exports = {
                           appConfig.acc_pri_k,
                           appConfig.acc_address,
                           null,
-                          gasEstimate,
+                          gasLimitCo,
                           appConfig.acc_address,
                           contracts.get(appConfig.name).inst.address,
                           contracts
@@ -187,11 +196,14 @@ module.exports = {
                               itemIndex
                             )
                         )
-                          .then( receipt => {
+                          .then(receipt => {
+                            if (receipt.status != 0x1) {
+                              throw new Error('Transaction failed');
+                            }
                             jsonRes.success = true;
                             jsonRes.msg = 'Market item transacted successfully';
                           })
-                          .catch( e => {
+                          .catch(e => {
                             jsonRes.msg = 'Change ownership failed';
                             res.status(500);
                           })

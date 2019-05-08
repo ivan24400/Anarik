@@ -45,7 +45,6 @@ contract User is UserIntf {
     userData.isAdmin = true;
     userData.user = _adminName;
     userData.passwd = _adminPasswd;
-    userData.index = (userArr.push(_adminName) - 1);
     addrUserMap[_account] = _adminName;
     emit UserEvent(msg.sender, _adminName, "created");
   }
@@ -65,6 +64,24 @@ contract User is UserIntf {
     _;
   }
 
+   /**
+   * @dev Check if admin credentials are valid
+   * @param _username username value of admin credential
+   * @param _password password value of admin credential
+   * @return A boolean indicating credential's validity
+   */
+  modifier verifyAdminCred(bytes32 _username, string memory _password) {
+    require(
+      (userMap[_username]._active) &&
+      (userMap[_username].isAdmin) &&
+      (keccak256(abi.encodePacked(userMap[_username].user)) == keccak256(abi.encodePacked(_username))) &&
+      (keccak256(bytes(userMap[_username].passwd)) == keccak256(bytes(_password))),
+      "Invalid credentials"
+    );
+    _;
+  }
+
+
   /**
    * @dev Check if user credentials are valid
    * @param _username username value of user credential
@@ -74,7 +91,8 @@ contract User is UserIntf {
   function verifyCredential(bytes32 _username, string memory _password)
    public
    view
-   verifyCred(_username, _password) returns(bool)
+   verifyCred(_username, _password)
+   returns(bool)
   {
     return true;
   }
@@ -85,14 +103,12 @@ contract User is UserIntf {
    * @param _password password value of admin credential
    * @return A boolean indicating credential's validity
    */
-  function verifyAdminCredential(bytes32 _username, string memory _password) public view returns(bool) {
-    require(
-      (userMap[_username]._active) &&
-      (userMap[_username].isAdmin) &&
-      (keccak256(abi.encodePacked(userMap[_username].user)) == keccak256(abi.encodePacked(_username))) &&
-      (keccak256(bytes(userMap[_username].passwd)) == keccak256(bytes(_password))),
-      "Invalid credentials"
-    );
+  function verifyAdminCredential(bytes32 _username, string memory _password)
+   public
+   view
+   verifyAdminCred(_username, _password)
+   returns(bool)
+  {
     return true;
   }
 
@@ -214,9 +230,9 @@ contract User is UserIntf {
   function getAdminAccAddr(bytes32 _username, string memory _password)
    public
    view
+   verifyAdminCred(_username, _password)
    returns(address)
   {
-    require(verifyAdminCredential(_username, _password));
     return (userMap[_username].account);
   }
 
@@ -236,7 +252,6 @@ contract User is UserIntf {
     require(
       (_index < userArr.length) &&
       (_index >= 0) &&
-      (userMap[userArr[_index]].isAdmin) &&
       (userMap[userArr[_index]]._active == true),
       "Invalid index"
     );

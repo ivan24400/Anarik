@@ -8,11 +8,18 @@ module.exports = function(grunt) {
         src: "./routes",
         dest: "../docs/api"
       }
+    },
+    jsdoc: {
+      dist : {
+          src: ['./app/**/*.js'],
+          dest: '../docs/app',
+      }
     }
   });
 
   grunt.loadNpmTasks('grunt-apidoc');
+  grunt.loadNpmTasks('grunt-jsdoc');
 
-  grunt.registerTask('default', ['apidoc']);
+  grunt.registerTask('default', ['apidoc', 'jsdoc']);
 
 };

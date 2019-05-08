@@ -1,6 +1,6 @@
 /**
  * Compile all required contract source files
- * @module network/compiler
+ * @module contracts/compiler
  * @requires solc
  * @requires fs
  * @requires path
@@ -65,19 +65,27 @@ function compileApp() {
     language: 'Solidity',
     sources: {
       'Anarik': {
-        content: fs.readFileSync(path.join(contAppBasePath, 'market', 'Anarik.sol'), 'utf8'),
+        content: fs.readFileSync(
+          path.join(contAppBasePath, 'market', 'Anarik.sol'),
+          'utf8'),
       },
     },
     settings: {
-  		outputSelection: {
-  			'*': {
-  				'*': ['*']
-  			}
-  		}
-  	}
+      evmVersion: 'byzantium',
+      outputSelection: {
+        '*': {
+          '*': ['*'],
+        },
+      },
+    },
   };
 
-  const output = JSON.parse(solc.compile(JSON.stringify(input), findAppSolImports));
+  const output = JSON.parse(
+    solc.compile(
+      JSON.stringify(input),
+      findAppSolImports
+    )
+  );
   return output.contracts;
 }
 
@@ -93,19 +101,27 @@ function compileUser() {
     language: 'Solidity',
     sources: {
       'User': {
-        content: fs.readFileSync(path.join(contAppBasePath,'market','user','User.sol'),'utf8')
+        content: fs.readFileSync(
+          path.join(contAppBasePath, 'market', 'user', 'User.sol'),
+          'utf8'
+        ),
       },
     },
     settings: {
-  		outputSelection: {
-  			'*': {
-  				'*': ['*']
-  			}
-  		}
-  	}
+      evmVersion: 'byzantium',
+      outputSelection: {
+        '*': {
+          '*': ['*'],
+        },
+      },
+    },
   };
 
-  const output = JSON.parse(solc.compile(JSON.stringify(input), findAppSolImports));
+  const output = JSON.parse(
+    solc.compile(JSON.stringify(input),
+      findAppSolImports
+    )
+  );
   return output.contracts;
 }
 
@@ -117,11 +133,26 @@ function compileUser() {
 function findTokenSolImports(filePath) {
   let content = null;
   if (filePath === 'SafeMath.sol' || filePath === 'math/SafeMath.sol') {
-    content = {contents: fs.readFileSync(path.join(contTokenBasePath, 'math', 'SafeMath.sol'),'utf8')};
+    content = {
+      contents: fs.readFileSync(
+        path.join(contTokenBasePath, 'math', 'SafeMath.sol'),
+        'utf8'
+      ),
+    };
   } else if (filePath === 'ERC20/ERC20.sol') {
-    content = {contents: fs.readFileSync(path.join(contTokenBasePath, 'token', 'ERC20', 'ERC20.sol'), 'utf8')};
+    content = {
+      contents: fs.readFileSync(
+        path.join(contTokenBasePath, 'token', 'ERC20', 'ERC20.sol'),
+        'utf8'
+      ),
+    };
   } else if (filePath === 'ERC20/ERC20Intf.sol') {
-    content = {contents: fs.readFileSync(path.join(contTokenBasePath, 'token', 'ERC20', 'ERC20Intf.sol'), 'utf8')};
+    content = {
+      contents: fs.readFileSync(
+        path.join(contTokenBasePath, 'token', 'ERC20', 'ERC20Intf.sol'),
+        'utf8'
+      ),
+    };
   } else {
     content = {error: 'File not found'};
   }
@@ -139,18 +170,27 @@ function compileToken() {
     language: 'Solidity',
     sources: {
       'Snail': {
-        content: fs.readFileSync(path.join(contTokenBasePath,'token','Snail.sol'),'utf8')
-      }
+        content: fs.readFileSync(
+          path.join(contTokenBasePath, 'token', 'Snail.sol'),
+          'utf8'
+        ),
+      },
     },
-    settings:{
+    settings: {
+      evmVersion: 'byzantium',
       outputSelection: {
         '*': {
-          '*':['*']
-        }
-      }
-    }
+          '*': ['*'],
+        },
+      },
+    },
   };
-  const output = JSON.parse(solc.compile(JSON.stringify(input), findTokenSolImports));
+  const output = JSON.parse(
+    solc.compile(
+      JSON.stringify(input),
+      findTokenSolImports
+    )
+  );
   return output.contracts;
 }
 

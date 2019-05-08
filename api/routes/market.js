@@ -1,8 +1,11 @@
 const express = require('express');
 const path = require('path');
 
-const marketCntlr = require(path.join(__dirname, '..', 'app', 'controllers', 'market.js'));
+const marketCntlr = require(path.join(
+  __dirname, '..', 'app', 'controllers', 'market.js'
+));
 
+// eslint-disable-next-line new-cap
 const router = express.Router();
 
 /**
@@ -26,7 +29,7 @@ router.get('/', marketCntlr.getMarket);
  * @apiGroup Market
  *
  * @apiParam {number} productIndex index number of item
- * 
+ *
  * @apiSuccess {boolean} success true
  * @apiSuccess {string} msg Market item transacted successfully
  *

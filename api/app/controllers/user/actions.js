@@ -34,14 +34,19 @@ module.exports = {
     if (req.session.user_account != null) {
       if (req.body.tokenCount != null) {
         if (!isNaN(req.body.tokenCount)) {
-          let gasLimit = parseInt(contracts.get(tknConfig.name).inst.addTokenRequest.estimateGas(
-            req.session.username,
-            req.session.user_account,
-            req.body.tokenCount,
-            {from: tknConfig.acc_address}
-          ));
+          let gasLimit = contracts
+            .get(tknConfig.name)
+            .inst
+            .addTokenRequest
+            .estimateGas(
+              req.session.username,
+              req.session.user_account,
+              req.body.tokenCount,
+              {from: tknConfig.acc_address}
+            );
 
           gasLimit = Math.round(gasLimit + gasLimit*0.3);
+          gasLimit = `0x${gasLimit.toString(16)}`;
 
           web3Helper.sendRawTransaction(
             contracts.get(tknConfig.name).web3,
@@ -58,6 +63,9 @@ module.exports = {
             )
           )
             .then(receipt => {
+              if (receipt.status != 0x1) {
+                throw new Error('Transaction failed');
+              }
               jsonRes.success = true;
               jsonRes.msg = 'Token requested successfully';
               res.json(jsonRes);
@@ -106,7 +114,7 @@ module.exports = {
             let logListFlag = true;
             for (let index = 0; index < tokenCount && logListFlag; index++) {
               logProms.push(
-                new Promise(function(resolve) {
+                new Promise(resolve => {
                   contracts.get(userConfig.name).inst.getLog(
                     req.session.username,
                     index,

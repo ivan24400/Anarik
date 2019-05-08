@@ -7,8 +7,11 @@
 const express = require('express');
 const path = require('path');
 
-const contractsCntlr = require(path.join(__dirname, '..', 'app', 'controllers', 'contracts'));
+const contractsCntlr = require(path.join(
+  __dirname, '..', 'app', 'controllers', 'contracts'
+));
 
+// eslint-disable-next-line new-cap
 const router = express.Router();
 
 

@@ -7,9 +7,14 @@
 const express = require('express');
 const path = require('path');
 
-const homeCntlr = require(path.join(__dirname, '..', 'app', 'controllers', 'home.js'));
-const authCntlr = require(path.join(__dirname, '..', 'app', 'controllers', 'authentication.js'));
+const homeCntlr = require(path.join(
+  __dirname, '..', 'app', 'controllers', 'home.js'
+));
+const authCntlr = require(path.join(
+  __dirname, '..', 'app', 'controllers', 'authentication.js'
+));
 
+// eslint-disable-next-line new-cap
 const router = express.Router();
 
 /**
@@ -32,7 +37,7 @@ router.get('/', homeCntlr.home);
  *
  * @apiParam {string} l_username username
  * @apiParam {string} l_password password
- * 
+ *
  * @apiSuccess {boolean} success true
  * @apiSuccess {string} username
  * @apiSuccess {number} Number of snails owned by user

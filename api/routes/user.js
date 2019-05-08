@@ -1,9 +1,14 @@
 const express = require('express');
 const path = require('path');
 
-const userActionsController = require(path.join(__dirname, '..', 'app', 'controllers', 'user', 'actions.js'));
-const userAccountController = require(path.join(__dirname, '..', 'app', 'controllers', 'user', 'account.js'));
+const userActionsController = require(path.join(
+  __dirname, '..', 'app', 'controllers', 'user', 'actions.js'
+));
+const userAccountController = require(path.join(
+  __dirname, '..', 'app', 'controllers', 'user', 'account.js'
+));
 
+// eslint-disable-next-line new-cap
 const router = express.Router();
 
 /**

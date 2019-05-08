@@ -62,6 +62,7 @@ module.exports = {
                   } catch (e) {
                     gasLimit = contracts.get(tknConfig.name).gas;
                   }
+                  gasLimit = `0x${gasLimit.toString(16)}`;
 
                   web3Helper.sendRawTransaction(
                     contracts.get(tknConfig.name).web3,
@@ -78,6 +79,9 @@ module.exports = {
                     )
                   )
                     .then(receipt => {
+                      if (receipt.status != 0x1) {
+                        throw new Error('Transaction failed');
+                      }
                       jsonRes.success = true;
                       jsonRes.msg = 'Token transferred successfully';
                       res.json(jsonRes);
@@ -120,18 +124,18 @@ module.exports = {
         (err, result) => {
           if (!err || result) {
             // Acknowledge token request
-            let gasLimit = parseInt(
-              contracts
-                .get(tknConfig.name)
-                .inst
-                .ackRequestAt
-                .estimateGas(
-                  req.body.tokenRequestIndex,
-                  req.session.user_account,
-                  {from: tknConfig.acc_address}
-                ));
+            let gasLimit = contracts
+              .get(tknConfig.name)
+              .inst
+              .ackRequestAt
+              .estimateGas(
+                req.body.tokenRequestIndex,
+                req.session.user_account,
+                {from: tknConfig.acc_address}
+              );
 
             gasLimit = Math.round(gasLimit + gasLimit*0.3);
+            gasLimit = `0x${gasLimit.toString(16)}`;
 
             web3Helper.sendRawTransaction(
               contracts.get(tknConfig.name).web3,
@@ -148,6 +152,9 @@ module.exports = {
                 .getData(req.body.tokenRequestIndex, req.session.user_account)
             )
               .then(receipt => {
+                if (receipt.status != 0x1) {
+                  throw new Error('Transaction failed');
+                }
                 jsonRes.success = true;
                 jsonRes.msg = 'Token request acknowledged successfully';
                 res.json(jsonRes);
@@ -181,13 +188,17 @@ module.exports = {
         req.session.password,
         (err, result) => {
           if (!err || result) {
-            let gasLimit = parseInt(
-              contracts.get(tknConfig.name).inst.rejectRequestAt.estimateGas(
+            let gasLimit = contracts
+              .get(tknConfig.name)
+              .inst
+              .rejectRequestAt
+              .estimateGas(
                 req.body.tokenRequestIndex,
                 {from: tknConfig.acc_address}
-              ));
+              );
 
             gasLimit = Math.round(gasLimit + gasLimit*0.3);
+            gasLimit = `0x${gasLimit.toString(16)}`;
 
             web3Helper.sendRawTransaction(
               contracts.get(tknConfig.name).web3,
@@ -204,6 +215,9 @@ module.exports = {
                 .getData(req.body.tokenRequestIndex)
             )
               .then(receipt => {
+                if (receipt.status != 0x1) {
+                  throw new Error('Transaction failed');
+                }
                 jsonRes.success = true;
                 jsonRes.message = 'Token request rejected successfully';
                 res.json(jsonRes);

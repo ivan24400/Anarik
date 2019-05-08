@@ -95,21 +95,21 @@ module.exports = {
     jsonRes.msg = 'NA';
 
     if (req.session.user_account != null) {
-      let gasEstimate = contracts.get(appConfig.name).inst.createItem.estimateGas(
+      let gasLimit = contracts.get(appConfig.name).inst.createItem.estimateGas(
         req.body.productName,
         req.body.productDesc,
         req.body.productPrice,
         req.session.user_account
       );
-      gasEstimate = Math.round(gasEstimate + gasEstimate*0.4);
-      gasEstimate = appConfig.DEFAULT_GAS*3;
+      gasLimit = Math.round(gasLimit + gasLimit*0.4);
+      gasLimit = `0x${gasLimit.toString(16)}`;
 
       web3Helper.sendRawTransaction(
         contracts.get(appConfig.name).web3,
         appConfig.acc_pri_k,
         appConfig.acc_address,
         null,
-        gasEstimate,
+        gasLimit,
         appConfig.acc_address,
         contracts.get(appConfig.name).inst.address,
         contracts.get(appConfig.name).inst.createItem.getData(
@@ -120,6 +120,9 @@ module.exports = {
         )
       )
         .then(receipt => {
+          if (receipt.status != 0x1) {
+            throw new Error('Transaction failed');
+          }
           jsonRes.success = true;
           jsonRes.msg = 'Added item successfully';
         })
@@ -162,9 +165,9 @@ module.exports = {
         }
 
         // Estimate gas limit
-        let gasEstimate;
+        let gasLimit;
         try {
-          gasEstimate = contracts.get(appConfig.name).inst.updateItem.estimateGas(
+          gasLimit = contracts.get(appConfig.name).inst.updateItem.estimateGas(
             req.body.productName,
             req.body.productDesc,
             req.body.productPrice,
@@ -173,17 +176,18 @@ module.exports = {
             req.session.username,
             req.session.password
           );
-          gasEstimate = Math.round(gasEstimate + gasEstimate*0.1);
+          gasLimit = Math.round(gasLimit + gasLimit*0.1);
         } catch (e) {
-          gasEstimate = appConfig.DEFAULT_GAS;
+          gasLimit = appConfig.DEFAULT_GAS;
         }
+        gasLimit = `0x${gasLimit.toString(16)}`;
 
         web3Helper.sendRawTransaction(
           contracts.get(appConfig.name).web3,
           appConfig.acc_pri_k,
           appConfig.acc_address,
           null,
-          gasEstimate,
+          gasLimit,
           appConfig.acc_address,
           contracts.get(appConfig.name).inst.address,
           contracts.get(appConfig.name).inst.updateItem.getData(
@@ -197,6 +201,9 @@ module.exports = {
           )
         )
           .then(receipt => {
+            if (receipt.status != 0x1) {
+              throw new Error('Transaction failed');
+            }
             jsonRes.success = true;
             jsonRes.msg = 'Updated item successfully';
           })
@@ -228,16 +235,21 @@ module.exports = {
     jsonRes.msg = 'NA';
 
     if (req.session.username != null) {
-      let gasEstimate = contracts.get(appConfig.name).inst.deleteItem.estimateGas(
-        req.body.productIndex);
-      gasEstimate = Math.round(gasEstimate + gasEstimate*0.4);
+      let gasLimit = contracts
+        .get(appConfig.name)
+        .inst
+        .deleteItem
+        .estimateGas(
+          req.body.productIndex
+        );
+      gasLimit = Math.round(gasLimit + gasLimit*0.4);
 
       web3Helper.sendRawTransaction(
         contracts.get(appConfig.name).web3,
         appConfig.acc_pri_k,
         appConfig.acc_address,
         null,
-        gasEstimate,
+        gasLimit,
         appConfig.acc_address,
         contracts.get(appConfig.name).inst.address,
         contracts.get(appConfig.name).inst.deleteItem.getData(
@@ -245,6 +257,9 @@ module.exports = {
         )
       )
         .then(receipt => {
+          if (receipt.status != 0x1) {
+            throw new Error('Transaction failed');
+          }
           jsonRes.success = true;
           jsonRes.msg = 'Deleted item successfully';
         })

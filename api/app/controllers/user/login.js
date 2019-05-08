@@ -37,17 +37,17 @@ module.exports = {
         {from: userConfig.acc_address},
         (err, result) => {
           if (result) {
-            let gasLimit = parseInt(
-              contracts
-                .get(userConfig.name)
-                .inst
-                .getUserAccAddr
-                .estimateGas(
-                  req.body.l_username,
-                  {from: userConfig.acc_address}
-                ));
+            let gasLimit = contracts
+              .get(userConfig.name)
+              .inst
+              .getUserAccAddr
+              .estimateGas(
+                req.body.l_username,
+                {from: userConfig.acc_address}
+              );
 
             gasLimit = Math.round(gasLimit + gasLimit*0.2);
+            gasLimit = `0x${gasLimit.toString(16)}`;
 
             contracts.get(userConfig.name).inst.getUserAccAddr(
               req.body.l_username,
@@ -132,7 +132,10 @@ module.exports = {
                         (err2, result2) => {
                           if (!err2) {
                             userArr.push(
-                              contracts.get(userConfig.name).web3.toUtf8(result2)
+                              contracts
+                                .get(userConfig.name)
+                                .web3
+                                .toUtf8(result2)
                             );
                           }
                         });
@@ -156,7 +159,9 @@ module.exports = {
                           {from: tknConfig.acc_address},
                           (err5, result5) => {
                             if (!err5) {
-                              const totalRequests = parseInt(result5.toString());
+                              const totalRequests = parseInt(
+                                result5.toString()
+                              );
                               const promiseArr = [];
                               // Get each request
                               for (let i=0; i<totalRequests; i++) {

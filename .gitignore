@@ -1,2 +1,4 @@
 # Admin's initial credential
 # /api/config/contracts/deploy/admin-cred.json
+/db/app/data
+/db/token/data
