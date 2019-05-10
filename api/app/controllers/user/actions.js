@@ -31,7 +31,7 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.session.user_account != null) {
+    if (req.session.userAccount != null) {
       if (req.body.tokenCount != null) {
         if (!isNaN(req.body.tokenCount)) {
           let gasLimit = contracts
@@ -40,7 +40,7 @@ module.exports = {
             .addTokenRequest
             .estimateGas(
               req.session.username,
-              req.session.user_account,
+              req.session.userAccount,
               req.body.tokenCount,
               {from: tknConfig.acc_address}
             );
@@ -58,7 +58,7 @@ module.exports = {
             contracts.get(tknConfig.name).inst.address,
             contracts.get(tknConfig.name).inst.addTokenRequest.getData(
               req.session.username,
-              req.session.user_account,
+              req.session.userAccount,
               req.body.tokenCount
             )
           )

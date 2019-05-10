@@ -79,10 +79,4 @@ router.put('/item', storeCntlr.updateItem);
  */
 router.delete('/item', storeCntlr.deleteItem);
 
-
-router.route('/item2')
-  .post(storeCntlr.addItem2)
-  .get(storeCntlr.getItem2Count)
-  .put(storeCntlr.getItem2);
-
 module.exports = router;

@@ -53,7 +53,7 @@ module.exports = {
                       .inst
                       .donateTokens
                       .estimateGas(
-                        req.session.user_account,
+                        req.session.userAccount,
                         result1,
                         req.body.tokenCount,
                         {from: tknConfig.acc_address}
@@ -73,7 +73,7 @@ module.exports = {
                     tknConfig.acc_address,
                     contracts.get(tknConfig.name).inst.address,
                     contracts.get(tknConfig.name).inst.donateTokens.getData(
-                      req.session.user_account,
+                      req.session.userAccount,
                       result1,
                       req.body.tokenCount
                     )
@@ -130,7 +130,7 @@ module.exports = {
               .ackRequestAt
               .estimateGas(
                 req.body.tokenRequestIndex,
-                req.session.user_account,
+                req.session.userAccount,
                 {from: tknConfig.acc_address}
               );
 
@@ -149,7 +149,7 @@ module.exports = {
                 .get(tknConfig.name)
                 .inst
                 .ackRequestAt
-                .getData(req.body.tokenRequestIndex, req.session.user_account)
+                .getData(req.body.tokenRequestIndex, req.session.userAccount)
             )
               .then(receipt => {
                 if (receipt.status != 0x1) {

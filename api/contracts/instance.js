@@ -1,10 +1,7 @@
 /**
  * Contract instances
  * @module contracts/instance
- * @requires path
  */
-const path = require('path');
-const errors = require(path.join(__dirname, '..', 'lib', 'error-msgs.js'));
 
 /**
  * 'contracts' is a dictionary with following structure:
@@ -31,8 +28,7 @@ function reset() {
  * @param {Object} contInst instance of deployed contract
  */
 function addContract(name, web3Inst, contInst) {
-  if(contracts == null) reset();
-  
+  if (contracts == null) reset();
   contracts[name] = {
     web3: web3Inst,
     inst: contInst,
@@ -46,10 +42,14 @@ function addContract(name, web3Inst, contInst) {
  * @return {Object} the contract object
  */
 function getContract(name) {
-  if (contracts != null && name !== undefined && contracts[name] !== undefined) {
+  if (
+    contracts != null &&
+    name !== undefined &&
+    contracts[name] !== undefined
+  ) {
     return contracts[name];
   } else {
-    throw new Error(errors.UNDEFINED_CONTRACT);
+    throw new Error('1001: No contracts found');
   }
 }
 

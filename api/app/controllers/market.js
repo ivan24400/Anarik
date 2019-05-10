@@ -91,7 +91,7 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.body.productIndex != null && req.session.user_account != null) {
+    if (req.body.productIndex != null && req.session.userAccount != null) {
       const itemIndex = req.body.productIndex;
 
       // Get items's essential details
@@ -102,7 +102,7 @@ module.exports = {
           if (!err1) {
             // check if buyer has sufficient balance
             contracts.get(tknConfig.name).inst.balanceOf(
-              req.session.user_account,
+              req.session.userAccount,
               {from: tknConfig.acc_address},
               (err2, result2) => {
                 if (!err2) {
@@ -110,7 +110,7 @@ module.exports = {
                   const itemPrice = parseInt(result1[4].toString());
                   if (itemPrice <= parseInt(result2.toString())) {
                     const sellerName = result1[1];
-                    const buyerAddr = req.session.user_account;
+                    const buyerAddr = req.session.userAccount;
                     const sellerAddr = result1[0];
 
                     // Send tokens

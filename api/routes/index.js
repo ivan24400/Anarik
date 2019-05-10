@@ -6,6 +6,7 @@
  */
 const express = require('express');
 const path = require('path');
+const passport = require('passport');
 
 const homeCntlr = require(path.join(
   __dirname, '..', 'app', 'controllers', 'home.js'

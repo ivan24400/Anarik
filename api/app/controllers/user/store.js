@@ -26,7 +26,7 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.session.user_account != null) {
+    if (req.session.userAccount != null) {
       // Get total item count in user store
       contracts.get(appConfig.name).inst.getItemCount(
         (err1, result1) => {
@@ -94,12 +94,12 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.session.user_account != null) {
+    if (req.session.userAccount != null) {
       let gasLimit = contracts.get(appConfig.name).inst.createItem.estimateGas(
         req.body.productName,
         req.body.productDesc,
         req.body.productPrice,
-        req.session.user_account
+        req.session.userAccount
       );
       gasLimit = Math.round(gasLimit + gasLimit*0.4);
       gasLimit = `0x${gasLimit.toString(16)}`;
@@ -116,7 +116,7 @@ module.exports = {
           req.body.productName,
           req.body.productDesc,
           req.body.productPrice,
-          req.session.user_account
+          req.session.userAccount
         )
       )
         .then(receipt => {

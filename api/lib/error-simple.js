@@ -3,8 +3,7 @@
  * @module lib/error-simple
  */
 
-const path = require('path');
-const msgs = require(path.join(__dirname, 'error-msgs'));
+const msgs = require('./error-msgs');
 
 /**
  * Simplify error messages to REST response
@@ -16,10 +15,9 @@ const simplifier = err => {
   reply.success = false;
   reply.msg = 'Something failed';
 
-  if (err.message === msgs.UNDEFINED_CONTRACT) {
-    reply.msg = 'No contracts found';
+  if (msgs.hasOwnProperty(err.message.split(':')[0])) {
+    reply.msg = msgs[err.message.split(':')[0]];
   }
-
   return reply;
 };
 

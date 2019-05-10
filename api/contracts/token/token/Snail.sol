@@ -62,7 +62,7 @@ contract Snail is ERC20 {
     TokenValue storage tc = _tokenRequestMap[_user];
     tc.value = _tokenCount;
     tc.username = _username;
-    // Overwrite an existing request if it exist
+    // Add new request per user
     if(!_tokenRequestMap[_user]._active) {
       tc.index = (_tokenRequestArr.push(_user) - 1);
       tc._active = true;
