@@ -1,12 +1,6 @@
 const express = require('express');
-const path = require('path');
 
-const userActionsController = require(path.join(
-  __dirname, '..', 'app', 'controllers', 'user', 'actions.js'
-));
-const userAccountController = require(path.join(
-  __dirname, '..', 'app', 'controllers', 'user', 'account.js'
-));
+const userAccountController = require('../app/controllers/user/account');
 
 // eslint-disable-next-line new-cap
 const router = express.Router();
@@ -53,34 +47,5 @@ router.put('/', userAccountController.updateUser);
  * @apiUse UnauthorizedError
  */
 router.delete('/', userAccountController.deleteUser);
-
-/**
- * @api {post} /user/req-tokens Request tokens (from admin)
- * @apiVersion 1.0.0
- * @apiName TokenRequest
- * @apiGroup User
- *
- * @apiParam {number} tokenCount Number of tokens
- *
- * @apiSuccess {boolean} success operation status
- * @apiSuccess {string} msg Token requested successfully
- *
- * @apiUse UnauthorizedError
- */
-router.post('/req-tokens', userActionsController.requestTokens);
-
-/**
- * @api {get} /user/purchase-history Retrieve purchase history of user
- * @apiVersion 1.0.0
- * @apiName PurchaseHistory
- * @apiGroup User
- *
- * @apiSuccess {boolean} success operation status
- * @apiSuccess {string} msg User deleted successfully
- *
- * @apiUse UnauthorizedError
- */
-router.get('/purchase-history', userActionsController.purchaseHistory);
-
 
 module.exports = router;

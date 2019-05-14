@@ -2,18 +2,11 @@
  * Manage user account(s)
  * @module app/controllers/user/account
  * @requires local:web3-helper
- * @requires path
  */
-const path = require('path');
-
 const web3Helper = require('web3-helper');
 
-const contracts = require(path.join(
-  __dirname, '..', '..', '..', 'contracts', 'instance.js'
-));
-const userConfig = require(path.join(
-  __dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'user.js'
-));
+const contracts = require('../../../contracts/instance');
+const userConfig = require('../../../config/contracts/deploy/user');
 
 module.exports = {
 
@@ -27,7 +20,7 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.session.username != null) {
+    if (req.locals._info.user != null) {
       jsonRes.msg = 'Logout first';
       res.json(jsonRes);
     } else if (req.body.s_username.length > 32) {
@@ -74,7 +67,10 @@ module.exports = {
                 userConfig.acc_address,
                 contracts.get(userConfig.name).inst.address,
                 contracts.get(userConfig.name).inst.addUser.getData(
-                  contracts.get(userConfig.name).web3.fromAscii(req.body.s_username),
+                  contracts
+                    .get(userConfig.name)
+                    .web3
+                    .fromAscii(req.body.s_username),
                   userAccAddr,
                   req.body.s_password
                 )
@@ -112,7 +108,7 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.session.username != null) {
+    if (req.locals._info.user != null) {
       jsonRes.msg = 'Logout first';
       res.json(jsonRes);
     } else if (req.body.username.length > 32) {
@@ -173,7 +169,7 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.session.username != null) {
+    if (req.locals._info.user != null) {
       jsonRes.msg = 'Logout first';
       res.json(jsonRes);
     } else if (req.body.username.length > 32) {

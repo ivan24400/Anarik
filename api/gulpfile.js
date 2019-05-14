@@ -3,22 +3,24 @@ const apidoc = require('gulp-apidoc');
 const jsdoc = require('gulp-jsdoc3');
 
 /**
- * Generate api documentation
+ * Generate documentation files
  */
 gulp.task('apidoc', done => {
   apidoc({
     src: './routes',
-    dest: '../docs-api',
+    dest: '../documentation/api',
   }, done);
 });
 
- 
-gulp.task('appdoc', function (cb) {
-    gulp.src(['../README.md', './app/**/*.js'], {read: false})
-        .pipe(jsdoc(cb))
-        .pipe(gulp.dest('../docs-app'));
+
+gulp.task('appdoc', done => {
+  gulp.src(['../README.md', './app/**/*.js'], {read: false})
+    .pipe(jsdoc(done))
+    .pipe(gulp.dest('../documentation/app'));
 });
 
 gulp.task('watch', () => {
   gulp.watch(['./routes/**'], ['apidoc']);
 });
+
+gulp.task('default', gulp.series(['apidoc', 'appdoc']));

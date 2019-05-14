@@ -5,11 +5,10 @@
  * @requires path
  */
 const express = require('express');
-const path = require('path');
 
-const adminController = require(path.join(
-  __dirname, '..', 'app', 'controllers', 'user', 'admin.js'
-));
+const passportAuthenticate = require('../middlewares/passportAuthenticate');
+
+const adminController = require('../app/controllers/user/admin');
 
 // eslint-disable-next-line new-cap
 const router = express.Router();
@@ -24,12 +23,14 @@ const router = express.Router();
  * @apiParam {number} tokenCount number of tokens to send
  *
  * @apiSuccess {boolean} success true
- * @apiSuccess {string} msg Token request acknowledged successfully
+ * @apiSuccess {string} msg Token transferred successfully
  *
  * @apiError {boolean} success false
- * @apiError {string} msg Request acknowledgement failed
+ * @apiError {string} msg Token transfer failed
+ *
+ * @apiUse UnauthorizedError
  */
-router.post('/tokens', adminController.sendTokens);
+router.post('/tokens', passportAuthenticate, adminController.sendTokens);
 
 /**
  * @api {post} /admin/req Acknowledge an user's token request
@@ -44,8 +45,13 @@ router.post('/tokens', adminController.sendTokens);
  *
  * @apiError {boolean} success false
  * @apiError {string} msg Request acknowledgement failed
+ *
+ * @apiError {boolean} success false
+ * @apiError {string} msg Unable to retrieve user's account
+ *
+ * @apiUse UnauthorizedError
  */
-router.post('/req', adminController.acknowledgeRequest);
+router.post('/req', passportAuthenticate, adminController.acknowledgeRequest);
 
 /**
  * @api {delete} /admin/req Reject an user's token request
@@ -60,7 +66,9 @@ router.post('/req', adminController.acknowledgeRequest);
  *
  * @apiError {boolean} success false
  * @apiError {string} msg Request rejection failed
+ *
+ * @apiUse UnauthorizedError
  */
-router.delete('/req', adminController.rejectRequest);
+router.delete('/req', passportAuthenticate, adminController.rejectRequest);
 
 module.exports = router;

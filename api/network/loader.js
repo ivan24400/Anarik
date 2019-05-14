@@ -9,20 +9,12 @@ const fs = require('fs');
 const path = require('path');
 const Web3 = require('web3');
 
-const contracts = require(path.join(
-  __dirname, '..', 'contracts', 'instance.js'
-));
+const contracts = require('../contracts/instance');
 
 // Configuration files
-const appConfig = require(path.join(
-  __dirname, '..', 'config', 'contracts', 'deploy', 'app.js'
-));
-const userConfig = require(path.join(
-  __dirname, '..', 'config', 'contracts', 'deploy', 'user.js'
-));
-const tknConfig = require(path.join(
-  __dirname, '..', 'config', 'contracts', 'deploy', 'token.js'
-));
+const appConfig = require('../config/contracts/deploy/app');
+const userConfig = require('../config/contracts/deploy/user');
+const tknConfig = require('../config/contracts/deploy/token');
 
 // Info files to load contracts from
 const appInfoFilePath = path.join(

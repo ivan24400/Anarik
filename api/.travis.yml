@@ -1,0 +1,13 @@
+language: node_js
+
+services:
+  - docker
+
+before_install:
+  - 
+  
+before_script:
+  - 
+
+script:
+  - docker-compose up

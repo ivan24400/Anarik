@@ -1,9 +1,7 @@
 const express = require('express');
-const path = require('path');
 
-const storeCntlr = require(path.join(
-  __dirname, '..', 'app', 'controllers', 'user', 'store.js'
-));
+const storeCntlr = require('../app/controllers/user/store');
+const passportAuthenticate = require('../middlewares/passportAuthenticate');
 
 // eslint-disable-next-line new-cap
 const router = express.Router();
@@ -20,7 +18,7 @@ const router = express.Router();
  *
  * @apiUse UnauthorizedError
  */
-router.get('/', storeCntlr.getUserStoreDetails);
+router.get('/', passportAuthenticate, storeCntlr.getUserStoreDetails);
 
 /**
  * @api {post} /store/item Add an item in the user store
@@ -39,7 +37,7 @@ router.get('/', storeCntlr.getUserStoreDetails);
  *
  * @apiUse UnauthorizedError
  */
-router.post('/item', storeCntlr.addItem);
+router.post('/item', passportAuthenticate, storeCntlr.addItem);
 
 /**
  * @api {put} /store/item Update an item in the store
@@ -58,7 +56,7 @@ router.post('/item', storeCntlr.addItem);
  *
  * @apiUse UnauthorizedError
  */
-router.put('/item', storeCntlr.updateItem);
+router.put('/item', passportAuthenticate, storeCntlr.updateItem);
 
 /**
  * @api {delete} /store/item Delete an item from the store
@@ -77,6 +75,6 @@ router.put('/item', storeCntlr.updateItem);
  *
  * @apiUse UnauthorizedError
  */
-router.delete('/item', storeCntlr.deleteItem);
+router.delete('/item', passportAuthenticate, storeCntlr.deleteItem);
 
 module.exports = router;

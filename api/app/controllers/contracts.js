@@ -1,27 +1,14 @@
 /**
  * Contract(s) deployment and loading
  * @module app/controllers/contracts
- * @requires path
  */
 
-const path = require('path');
+const appConfig = require('../../config/contracts/deploy/app');
+const tknConfig = require('../../config/contracts/deploy/token');
 
-const appConfig = require(path.join(
-  __dirname, '..', '..', 'config', 'contracts', 'deploy', 'app.js'
-));
-const tknConfig = require(path.join(
-  __dirname, '..', '..', 'config', 'contracts', 'deploy', 'token.js'
-));
-
-const contracts = require(path.join(
-  __dirname, '..', '..', 'contracts', 'instance.js'
-));
-const loader = require(path.join(
-  __dirname, '..', '..', 'network', 'loader.js'
-));
-const deploy = require(path.join(
-  __dirname, '..', '..', 'network', 'deploy.js'
-));
+const contracts = require('../../contracts/instance');
+const loader = require('../../network/loader');
+const deploy = require('../../network/deploy');
 
 module.exports = {
 

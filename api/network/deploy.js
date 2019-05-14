@@ -12,27 +12,17 @@ const path = require('path');
 
 const web3Helper = require('web3-helper');
 
-const contracts = require(path.join(
-  __dirname, '..', 'contracts', 'instance.js'
-));
-
-const compiler = require(path.join(
-  __dirname, '..', 'contracts', 'compiler.js'
-));
+const contracts = require('../contracts/instance');
+const compiler = require('../contracts/compiler');
 
 // Configuration files
-const appConfig = require(path.join(
-  __dirname, '..', 'config', 'contracts', 'deploy', 'app.js'
-));
-const userConfig = require(path.join(
-  __dirname, '..', 'config', 'contracts', 'deploy', 'user.js'
-));
+const appConfig = require('../config/contracts/deploy/app');
+const userConfig = require('../config/contracts/deploy/user');
+const tknConfig = require('../config/contracts/deploy/token');
+
 const adminCred = JSON.parse(fs.readFileSync(path.join(
   __dirname, '..', 'config', 'contracts', 'deploy', 'admin-cred.json'
 ), 'utf8'));
-const tknConfig = require(path.join(
-  __dirname, '..', 'config', 'contracts', 'deploy', 'token.js'
-));
 
 // Info files to store deployment details
 const appInfoFilePath = path.join(

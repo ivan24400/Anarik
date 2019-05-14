@@ -1,7 +1,12 @@
+/**
+ * Redis cache setup
+ * @module cache/redis
+ * @requires local:web3-helper
+ * @requires redis
+ */
 const redis = require('redis');
-const path = require('path');
 
-const redisConfig = require(path.join(__dirname, '..', 'cache', 'redis.js'));
+const redisConfig = require('../cache/redis');
 
 const redisClient = redis.createClient({
   host: redisConfig.host,

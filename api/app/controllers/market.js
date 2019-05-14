@@ -4,21 +4,13 @@
  * @requires local:web3-helper
  */
 
-const path = require('path');
-
 const web3Helper = require('web3-helper');
 
-const contracts = require(path.join(
-  __dirname, '..', '..', 'contracts', 'instance.js'
-));
+const contracts = require('../../contracts/instance');
 
-const appConfig = require(path.join(
-  __dirname, '..', '..', 'config', 'contracts', 'deploy', 'app.js'
-));
+const appConfig = require('../../config/contracts/deploy/app');
 
-const tknConfig = require(path.join(
-  __dirname, '..', '..', 'config', 'contracts', 'deploy', 'token.js'
-));
+const tknConfig = require('../../config/contracts/deploy/token');
 
 const USER_LOG_DELIMITER = '\u232c';
 
@@ -29,7 +21,7 @@ module.exports = {
    * @param {Object} res - http response object
    */
   getMarket: (req, res) => {
-    if (req.session.username != null) {
+    if (req.locals._info.user != null) {
       const jsonRes = {};
       jsonRes.success = false;
       jsonRes.status = 'success';
@@ -49,7 +41,7 @@ module.exports = {
                 new Promise(resolve => {
                   contracts.get(appConfig.name).inst.getPublicMarketItem(
                     index,
-                    req.session.username,
+                    req.locals._info.user,
                     {from: appConfig.acc_address},
                     (err1, result1) => {
                       if (!err1) {
@@ -91,7 +83,7 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.body.productIndex != null && req.session.userAccount != null) {
+    if (req.body.productIndex != null && req.locals._info.account != null) {
       const itemIndex = req.body.productIndex;
 
       // Get items's essential details
@@ -102,7 +94,7 @@ module.exports = {
           if (!err1) {
             // check if buyer has sufficient balance
             contracts.get(tknConfig.name).inst.balanceOf(
-              req.session.userAccount,
+              req.locals._info.account,
               {from: tknConfig.acc_address},
               (err2, result2) => {
                 if (!err2) {
@@ -110,7 +102,7 @@ module.exports = {
                   const itemPrice = parseInt(result1[4].toString());
                   if (itemPrice <= parseInt(result2.toString())) {
                     const sellerName = result1[1];
-                    const buyerAddr = req.session.userAccount;
+                    const buyerAddr = req.locals._info.account;
                     const sellerAddr = result1[0];
 
                     // Send tokens
@@ -156,7 +148,7 @@ module.exports = {
                         result1[4].toString();
 
                         const sellerLog = 'S'+USER_LOG_DELIMITER +
-                        req.session.username +
+                        req.locals._info.user +
                         USER_LOG_DELIMITER +
                         result1[2] +
                         USER_LOG_DELIMITER +

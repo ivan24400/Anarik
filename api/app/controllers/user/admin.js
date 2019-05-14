@@ -3,21 +3,13 @@
  * Manage user account(s)
  * @module app/controllers/user/admin
  * @requires local:web3-helper
- * @requires path
  */
-const path = require('path');
 
 const web3Helper = require('web3-helper');
 
-const contracts = require(path.join(
-  __dirname, '..', '..', '..', 'contracts', 'instance.js'
-));
-const tknConfig = require(path.join(
-  __dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'token.js'
-));
-const userConfig = require(path.join(
-  __dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'user.js'
-));
+const contracts = require('../../../contracts/instance');
+const tknConfig = require('../../../config/contracts/deploy/token');
+const userConfig = require('../../../config/contracts/deploy/user');
 
 module.exports = {
 
@@ -37,8 +29,8 @@ module.exports = {
     ) {
       // Verify for admin's credentials
       contracts.get(userConfig.name).inst.verifyAdminCredential(
-        req.session.username,
-        req.session.password,
+        req.locals._info.user,
+        req.locals._info.password,
         (err, result) => {
           if (!err || result) {
             contracts.get(userConfig.name).inst.getUserAccAddr(
@@ -53,7 +45,7 @@ module.exports = {
                       .inst
                       .donateTokens
                       .estimateGas(
-                        req.session.userAccount,
+                        req.locals._info.account,
                         result1,
                         req.body.tokenCount,
                         {from: tknConfig.acc_address}
@@ -73,7 +65,7 @@ module.exports = {
                     tknConfig.acc_address,
                     contracts.get(tknConfig.name).inst.address,
                     contracts.get(tknConfig.name).inst.donateTokens.getData(
-                      req.session.userAccount,
+                      req.locals._info.account,
                       result1,
                       req.body.tokenCount
                     )
@@ -119,8 +111,8 @@ module.exports = {
     if (req.body.tokenRequestIndex != null) {
       // Verify admin's credential
       contracts.get(userConfig.name).inst.verifyAdminCredential(
-        req.session.username,
-        req.session.password,
+        req.locals._info.user,
+        req.locals._info.password,
         (err, result) => {
           if (!err || result) {
             // Acknowledge token request
@@ -130,7 +122,7 @@ module.exports = {
               .ackRequestAt
               .estimateGas(
                 req.body.tokenRequestIndex,
-                req.session.userAccount,
+                req.locals._info.account,
                 {from: tknConfig.acc_address}
               );
 
@@ -149,7 +141,7 @@ module.exports = {
                 .get(tknConfig.name)
                 .inst
                 .ackRequestAt
-                .getData(req.body.tokenRequestIndex, req.session.userAccount)
+                .getData(req.body.tokenRequestIndex, req.locals._info.account)
             )
               .then(receipt => {
                 if (receipt.status != 0x1) {
@@ -184,8 +176,8 @@ module.exports = {
     if (req.body.tokenRequestIndex != null) {
       // Verify admin's credential
       contracts.get(userConfig.name).inst.verifyAdminCredential(
-        req.session.username,
-        req.session.password,
+        req.locals._info.user,
+        req.locals._info.password,
         (err, result) => {
           if (!err || result) {
             let gasLimit = contracts

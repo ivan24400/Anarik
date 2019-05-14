@@ -1,9 +1,8 @@
 const express = require('express');
-const path = require('path');
 
-const marketCntlr = require(path.join(
-  __dirname, '..', 'app', 'controllers', 'market.js'
-));
+const passportAuthenticate = require('../middlewares/passportAuthenticate');
+
+const marketCntlr = require('../app/controllers/market');
 
 // eslint-disable-next-line new-cap
 const router = express.Router();
@@ -35,6 +34,6 @@ router.get('/', marketCntlr.getMarket);
  *
  * @apiUse UnauthorizedError
  */
-router.put('/item', marketCntlr.buyItem);
+router.put('/item', passportAuthenticate, marketCntlr.buyItem);
 
 module.exports = router;

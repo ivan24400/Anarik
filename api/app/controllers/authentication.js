@@ -1,15 +1,22 @@
 /**
  * Grant/Deny access to user
  * @module app/controllers/authentication
+ * @requires passport
+ * @requires jsonwebtoken
  */
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 
-const contracts = require('../../contracts/instance.js');
+const contracts = require('../../contracts/instance');
+const redisClient = require('../../cache/redis');
 
-const userTypesInfo = require('../../info/user-types.js');
-const userConfig = require('../../config/contracts/deploy/user.js');
-const jwtConfig = require('../../config/jwtConfig.js');
+const userTypesInfo = require('../../info/user-types');
+const userConfig = require('../../config/contracts/deploy/user');
+const accessToken = require('../../config/access-token');
+const jwtConfig = require('../../config/jwt-config');
+
+const errMsgs = require('../../lib/error-msgs');
+const errSimplify = require('../../lib/error-simple');
 
 module.exports = {
   /**
@@ -20,34 +27,57 @@ module.exports = {
    */
   login: (req, res, next) => {
     passport.authenticate('login', (err, user, info) => {
-      if (user && !err) {
-        const payload = {id: user};
+      if (user && !err && info) {
+        // Token will expire in 1 hour
+        const payload = {
+          exp: Math.floor(Date.now() / 1000 + accessToken.accessTokenExp),
+          user: user,
+        };
         info.token = jwt.sign(payload, jwtConfig.secret);
+        // Refresh token will expire in 2 days
+        const refPayload = {
+          exp: Math.floor(Date.now() / 1000 + accessToken.refreshTokenExp),
+          user: user,
+        };
+        info.refreshToken = jwt.sign(refPayload, jwtConfig.secret);
         res.json(info);
       } else {
-        const e = new Error();
-        e.message = err.message;
-        e.stack = err.stack;
-        throw e;
+        if (!err) {
+          res.json({
+            success: false,
+            msg: errMsgs['1'],
+          });
+        } else {
+          res.json({
+            success: false,
+            msg: errSimplify(err),
+          });
+        }
       }
     })(req, res, next);
   },
 
+  /**
+   * Verify user credentials
+   * @param {string} username - username credential
+   * @param {string} password - password credential
+   * @param {Object} next - callback, for next verification stage
+   */
   verify: (username, password, next) => {
     contracts.get(userConfig.name).inst.isUserAdmin(
       contracts.get(userConfig.name).web3.fromAscii(username),
       (err, result) => {
-        if (err) {
+        if (err && err.message.indexOf('User') == -1) {
           next(err, null);
         } else if (result) {
           contracts.get(userConfig.name).inst.verifyAdminCredential(
             username,
             password,
             (vAdminCredErr, vAdminCredRes) => {
-              if (vAdminCredErr) {
+              if (!vAdminCredRes) {
                 return next(vAdminCredErr, null);
               } else {
-                return next(null, vAdminCredRes, {type: userTypesInfo.ADMIN});
+                return next(null, username, {type: userTypesInfo.ADMIN});
               }
             });
         } else {
@@ -56,15 +86,42 @@ module.exports = {
             password,
             {from: userConfig.acc_address},
             (vCredErr, vCredRes) => {
-              if (vCredErr) {
+              if (!vCredRes) {
                 return next(vCredErr, null);
               } else {
-                return next(null, vCredRes, {type: userTypesInfo.REGULAR});
+                return next(null, username, {type: userTypesInfo.REGULAR});
               }
             });
         }
       }
     );
+  },
+
+  /**
+   * Refresh an user's token
+   * @param {Object} req - http request object
+   * @param {Object} res - http response object
+   */
+  refreshToken: (req, res) => {
+    const jsonRes = {};
+    jsonRes.success = false;
+    redisClient.exists(
+      `users:${req.locals._info.user}`,
+      (err, redisRes) => {
+        if (err || redisRes == 0) {
+          jsonRes.msg = 'Invalid user';
+          res.json(jsonRes);
+        } else {
+          // Expire token in 1 hour
+          const payload = {
+            exp: Math.floor(Date.now() / 1000) + accessToken.accessTokenExp,
+            user: req.locals._info.user,
+          };
+          jsonRes.success = true;
+          jsonRes.token = jwt.sign(payload, jwtConfig.secret);
+          res.json(jsonRes);
+        }
+      });
   },
 
   /**
@@ -78,9 +135,8 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    req.session.destroy(err => {
+    redisClient.del(`users:${req.locals._info.user}`, (err, redisRes) => {
       if (err) {
-        req.session = null;
         jsonRes.msg = 'Something failed';
       } else {
         jsonRes.success = true;

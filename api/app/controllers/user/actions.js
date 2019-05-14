@@ -2,22 +2,14 @@
  * Manage user account(s)
  * @module app/controllers/user/actions
  * @requires local:web3-helper
- * @requires path
  */
-const path = require('path');
 
 const web3Helper = require('web3-helper');
 
-const contracts = require(path.join(
-  __dirname, '..', '..', '..', 'contracts', 'instance.js'
-));
+const contracts = require('../../../contracts/instance');
 
-const userConfig = require(path.join(
-  __dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'user.js'
-));
-const tknConfig = require(path.join(
-  __dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'token.js'
-));
+const userConfig = require('../../../config/contracts/deploy/user');
+const tknConfig = require('../../../config/contracts/deploy/token');
 
 module.exports = {
 
@@ -31,7 +23,7 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.session.userAccount != null) {
+    if (req.locals._info.account != null) {
       if (req.body.tokenCount != null) {
         if (!isNaN(req.body.tokenCount)) {
           let gasLimit = contracts
@@ -39,8 +31,8 @@ module.exports = {
             .inst
             .addTokenRequest
             .estimateGas(
-              req.session.username,
-              req.session.userAccount,
+              req.locals._info.user,
+              req.locals._info.account,
               req.body.tokenCount,
               {from: tknConfig.acc_address}
             );
@@ -57,8 +49,8 @@ module.exports = {
             tknConfig.acc_address,
             contracts.get(tknConfig.name).inst.address,
             contracts.get(tknConfig.name).inst.addTokenRequest.getData(
-              req.session.username,
-              req.session.userAccount,
+              req.locals._info.user,
+              req.locals._info.account,
               req.body.tokenCount
             )
           )
@@ -98,11 +90,11 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.session.username != null) {
+    if (req.locals._info.user != null) {
       jsonRes.data = [];
 
       contracts.get(userConfig.name).inst.getLogCount(
-        req.session.username,
+        req.locals._info.user,
         {from: userConfig.acc_address},
         (err1, result1) => {
           if (!err1) {
@@ -116,12 +108,19 @@ module.exports = {
               logProms.push(
                 new Promise(resolve => {
                   contracts.get(userConfig.name).inst.getLog(
-                    req.session.username,
+                    req.locals._info.user,
                     index,
                     {from: userConfig.acc_address},
                     (err2, result2) => {
                       if (!err2) {
-                        jsonRes.data.push(result2.split('\u232c'));
+                        const historyItemArr = result2.split('\u232c');
+                        const historyItemObj = {};
+                        historyItemObj.trade = historyItemArr[0];
+                        historyItemObj.dealer = historyItemArr[1];
+                        historyItemObj.name = historyItemArr[2];
+                        historyItemObj.desc = historyItemArr[3];
+                        historyItemObj.price = historyItemArr[4];
+                        jsonRes.data.push(historyItemObj);
                       } else {
                         if (index == 0) {
                           logListFlag = false;

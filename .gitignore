@@ -2,3 +2,4 @@
 # /api/config/contracts/deploy/admin-cred.json
 /db/app/data
 /db/token/data
+/api/node_modules

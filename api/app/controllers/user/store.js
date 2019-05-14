@@ -2,18 +2,11 @@
  * User's item store
  * @module app/controllers/user/store
  * @requires local:web3-helper
- * @requires path
  */
-const path = require('path');
-
 const web3Helper = require('web3-helper');
 
-const contracts = require(path.join(
-  __dirname, '..', '..', '..', 'contracts', 'instance.js'
-));
-const appConfig = require(path.join(
-  __dirname, '..', '..', '..', 'config', 'contracts', 'deploy', 'app.js'
-));
+const contracts = require('../../../contracts/instance');
+const appConfig = require('../../../config/contracts/deploy/app');
 
 module.exports = {
   /**
@@ -26,62 +19,57 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.session.userAccount != null) {
-      // Get total item count in user store
-      contracts.get(appConfig.name).inst.getItemCount(
-        (err1, result1) => {
-          if (!err1) {
-            const itemCount = parseInt(result1.toString());
-            jsonRes.success = true;
-            jsonRes.data = [];
+    // Get total item count in user store
+    contracts.get(appConfig.name).inst.getItemCount(
+      (err1, result1) => {
+        if (!err1) {
+          const itemCount = parseInt(result1.toString());
+          jsonRes.success = true;
+          jsonRes.data = [];
 
-            if (itemCount === 0) {
-              res.json(jsonRes);
-              return;
-            }
-
-            let callbackResolveIndex = 0;
-
-            const callbackResolve = () => {
-              callbackResolveIndex++;
-              if (callbackResolveIndex == itemCount) {
-                jsonRes.success = true;
-                res.json(jsonRes);
-              }
-            };
-
-            let itemListFlag = true;
-            for (let index = 0; index < itemCount && itemListFlag; index++) {
-              contracts.get(appConfig.name).inst.getUserStoreItem(
-                req.session.username,
-                index,
-                {from: appConfig.acc_address},
-                (err2, result2) => {
-                  if (!err2) {
-                    jsonRes.data.push({
-                      'sale': result2[0],
-                      'index': index,
-                      'name': result2[1],
-                      'description': result2[2],
-                      'price': result2[3].toString(),
-                    });
-                  } else {
-                    if (index == 0) {
-                      itemListFlag = false;
-                    }
-                  }
-                  callbackResolve();
-                });
-            }
-          } else {
-            jsonRes.msg = 'Failed to retrieve a user item count';
-            res.status(500).json(jsonRes);
+          if (itemCount === 0) {
+            res.json(jsonRes);
+            return;
           }
-        });
-    } else {
-      jsonRes.msg = 'Unauthorised';
-      res.status(401).json(jsonRes);
-    }
+
+          let callbackResolveIndex = 0;
+
+          const callbackResolve = () => {
+            callbackResolveIndex++;
+            if (callbackResolveIndex == itemCount) {
+              jsonRes.success = true;
+              res.json(jsonRes);
+            }
+          };
+
+          let itemListFlag = true;
+          for (let index = 0; index < itemCount && itemListFlag; index++) {
+            contracts.get(appConfig.name).inst.getUserStoreItem(
+              req.locals._info.user,
+              index,
+              {from: appConfig.acc_address},
+              (err2, result2) => {
+                if (!err2) {
+                  jsonRes.data.push({
+                    'sale': result2[0],
+                    'index': index,
+                    'name': result2[1],
+                    'description': result2[2],
+                    'price': result2[3].toString(),
+                  });
+                } else {
+                  if (index == 0) {
+                    itemListFlag = false;
+                  }
+                }
+                callbackResolve();
+              });
+          }
+        } else {
+          jsonRes.msg = 'Failed to retrieve a user item count';
+          res.status(500).json(jsonRes);
+        }
+      });
   },
 
   /**
@@ -94,12 +82,12 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.session.userAccount != null) {
+    if (req.locals._info.account != null) {
       let gasLimit = contracts.get(appConfig.name).inst.createItem.estimateGas(
         req.body.productName,
         req.body.productDesc,
         req.body.productPrice,
-        req.session.userAccount
+        req.locals._info.account
       );
       gasLimit = Math.round(gasLimit + gasLimit*0.4);
       gasLimit = `0x${gasLimit.toString(16)}`;
@@ -116,7 +104,7 @@ module.exports = {
           req.body.productName,
           req.body.productDesc,
           req.body.productPrice,
-          req.session.userAccount
+          req.locals._info.account
         )
       )
         .then(receipt => {
@@ -149,7 +137,7 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.session.username != null) {
+    if (req.locals._info.user != null) {
       if (
         req.body == null ||
         Object.keys(req.body).length === 0 ||
@@ -173,8 +161,8 @@ module.exports = {
             req.body.productPrice,
             req.body.productSale,
             req.body.productIndex,
-            req.session.username,
-            req.session.password
+            req.locals._info.user,
+            req.locals._info.password
           );
           gasLimit = Math.round(gasLimit + gasLimit*0.1);
         } catch (e) {
@@ -196,8 +184,8 @@ module.exports = {
             req.body.productPrice,
             req.body.productSale,
             req.body.productIndex,
-            req.session.username,
-            req.session.password
+            req.locals._info.user,
+            req.locals._info.password
           )
         )
           .then(receipt => {
@@ -234,7 +222,7 @@ module.exports = {
     jsonRes.success = false;
     jsonRes.msg = 'NA';
 
-    if (req.session.username != null) {
+    if (req.locals._info.user != null) {
       let gasLimit = contracts
         .get(appConfig.name)
         .inst

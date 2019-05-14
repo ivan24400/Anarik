@@ -5,15 +5,11 @@
  * @requires path
  */
 const express = require('express');
-const path = require('path');
-const passport = require('passport');
 
-const homeCntlr = require(path.join(
-  __dirname, '..', 'app', 'controllers', 'home.js'
-));
-const authCntlr = require(path.join(
-  __dirname, '..', 'app', 'controllers', 'authentication.js'
-));
+const passportAuthenticate = require('../middlewares/passportAuthenticate');
+
+const homeCntlr = require('../app/controllers/home');
+const authCntlr = require('../app/controllers/authentication');
 
 // eslint-disable-next-line new-cap
 const router = express.Router();
@@ -59,6 +55,6 @@ router.post('/login', authCntlr.login);
  * @apiError {boolean} success false
  * @apiError {string} msg Something failed
  */
-router.post('/logout', authCntlr.logout);
+router.post('/logout', passportAuthenticate, authCntlr.logout);
 
 module.exports = router;
