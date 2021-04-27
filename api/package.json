@@ -28,7 +28,7 @@
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
-    "redis": "^2.8.0",
+    "redis": "^3.1.1",
     "solc": "^0.5.7",
     "web3": "^0.20.7",
     "web3-helper": "file:local_modules/web3-helper",
