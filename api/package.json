@@ -23,7 +23,7 @@
     "http-errors": "~1.6.2",
     "jsonwebtoken": "^8.5.1",
     "keythereum": "^1.0.4",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.21",
     "morgan": "~1.9.0",
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",
